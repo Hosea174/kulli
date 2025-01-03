@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Truck Owner Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+  <h2>Welcome, {{ current_user.name }}</h2>
+  <h3>Available Trips</h3>
+  <ul class="trip-list">
+    {% for trip in trips %}
+    <li>
+      <strong>{{ trip.pickup_location }}</strong> to <strong>{{ trip.destination }}</strong>
+      - Estimated Price: ${{ trip.est_price }}
+      <!-- <form method="POST" action="{{ url_for('accept_trip', trip_id=trip.id) }}"> -->
+      <form method="POST" action="/">
+        <button type="submit" class="btn-primary">Accept</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

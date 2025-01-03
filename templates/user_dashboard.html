@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}User Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+  <h2>Welcome, {{ current_user.name }}</h2>
+  <div class="dashboard-actions">
+    <!-- <a href="{{ url_for('create_trip') }}" class="btn-primary">Create a New Trip</a> -->
+    <a href="/" class="btn-primary">Create a New Trip</a>
+  </div>
+  <h3>Your Trips</h3>
+  <ul class="trip-list">
+    {% for trip in trips %}
+    <li>
+      <strong>{{ trip.pickup_location }}</strong> to <strong>{{ trip.destination }}</strong>
+      - Status: {{ trip.status }}
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

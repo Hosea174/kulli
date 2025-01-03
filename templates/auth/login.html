@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+  <h2>Login</h2>
+  <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+
+    <div class="form-group">
+      <label>Login as:</label>
+      <select name="user_type" required>
+        <option value="user">User</option>
+        <option value="truck_owner">Truck Owner</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn-primary">Login</button>
+  </form>
+
+  <div class="auth-links">
+    <a href="{{ url_for('auth.register_user') }}">Register as User</a>
+    <a href="{{ url_for('auth.register_truck_owner') }}">Register as Truck Owner</a>
+  </div>
+</div>
+{% endblock %}

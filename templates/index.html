@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="landing-page">
+  <header>
+    <h1>Welcome to TruckConnect</h1>
+    <p>Connecting users with truck owners for hassle-free load transportation.</p>
+  </header>
+  <div class="cta-buttons">
+    <a href="{{ url_for('auth.register_user') }}" class="btn-primary">Register as User</a>
+    <a href="{{ url_for('auth.register_truck_owner') }}" class="btn-secondary">Register as Truck Owner</a>
+  </div>
+</div>
+{% endblock %}
