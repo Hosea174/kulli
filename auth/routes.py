@@ -80,7 +80,7 @@ def register_truck_owner():
 
 def send_verification_email(email, token):
     msg = Message('Verify your email',
-                  sender='your-email@example.com',
+                  sender='kulli@zoho.com',
                   recipients=[email])
     verification_url = url_for('auth.verify_email', token=token, _external=True)
     msg.body = f'Click the following link to verify your email: {verification_url}'
@@ -115,22 +115,22 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         user_type = request.form.get('user_type')
-        
+
         user = None
         if user_type == 'user':
             user = User.query.filter_by(email=email).first()
-        else:
+        elif user_type == 'truck_owner':
             user = TruckOwner.query.filter_by(email=email).first()
             
         if user and check_password_hash(user.password, password):
             if not user.email_verified:
                 flash('Please verify your email first.')
                 return redirect(url_for('auth.login'))
-                
+            
             login_user(user)
             if user_type == 'user':
                 return redirect(url_for('user_dashboard'))
-            else:
+            elif user_type == 'truck_owner':
                 return redirect(url_for('truck_owner_dashboard'))
                 
         flash('Please check your login details and try again.')

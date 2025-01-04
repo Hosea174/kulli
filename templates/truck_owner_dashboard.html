@@ -11,7 +11,6 @@
     <li>
       <strong>{{ trip.pickup_location }}</strong> to <strong>{{ trip.destination }}</strong>
       - Estimated Price: ${{ trip.est_price }}
-      <!-- <form method="POST" action="{{ url_for('accept_trip', trip_id=trip.id) }}"> -->
       <form method="POST" action="/">
         <button type="submit" class="btn-primary">Accept</button>
       </form>
