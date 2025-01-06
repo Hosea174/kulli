@@ -13,8 +13,8 @@ class Config:
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USE_SSL = False
-    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
-    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_USERNAME = 'l.mateev@scm.bg'
+    MAIL_PASSWORD = 'Screws33'
     
     # Mapbox settings
     MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
