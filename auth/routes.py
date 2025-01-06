@@ -24,26 +24,20 @@ def register_user():
             flash('Email already exists')
             return redirect(url_for('auth.register_user'))
         
-        verification_token = str(uuid.uuid4())
         new_user = User(
             email=email,
             name=name,
             phone=phone,
             password=generate_password_hash(password, method='pbkdf2:sha256'),
-            verification_token=verification_token
+            email_verified=True  # Skip verification for now
         )
         
         db.session.add(new_user)
         db.session.commit()
         print(f"New user created: {new_user.id}")  # Debug log
         
-        # Send verification email
-        if send_verification_email(email, verification_token):
-            flash('Please check your email to verify your account')
-            return redirect(url_for('auth.login'))
-        else:
-            flash('Failed to send verification email. Please contact support.')
-            return redirect(url_for('auth.register_user'))
+        flash('Registration successful! Please login.')
+        return redirect(url_for('auth.login'))
     
     return render_template('auth/register_user.html')
 
@@ -62,7 +56,6 @@ def register_truck_owner():
             flash('Email already exists')
             return redirect(url_for('auth.register_truck_owner'))
         
-        verification_token = str(uuid.uuid4())
         new_owner = TruckOwner(
             email=email,
             name=name,
@@ -70,16 +63,13 @@ def register_truck_owner():
             password=generate_password_hash(password, method='pbkdf2:sha256'),
             license_plate=license_plate,
             truck_type=truck_type,
-            verification_token=verification_token
+            email_verified=True  # Skip verification for now
         )
         
         db.session.add(new_owner)
         db.session.commit()
         
-        # Send verification email
-        send_verification_email(email, verification_token)
-        
-        flash('Please check your email to verify your account')
+        flash('Registration successful! Please login.')
         return redirect(url_for('auth.login'))
     
     return render_template('auth/register_truck_owner.html')
@@ -161,10 +151,6 @@ def login():
             print(f"Email verified: {user.email_verified}")  # Debug log
             
         if user and check_password_hash(user.password, password):
-            if not user.email_verified:
-                flash('Please verify your email first.')
-                return redirect(url_for('auth.login'))
-            
             login_user(user)
             print(f"Login successful for: {email}")  # Debug log
             if user_type == 'user':
