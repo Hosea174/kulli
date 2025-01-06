@@ -154,11 +154,26 @@ def login():
             print(f"Password check: {check_password_hash(user.password, password)}")  # Debug log
             print(f"Email verified: {user.email_verified}")  # Debug log
             
-        if user and check_password_hash(user.password, password):
-            if current_app.config['EMAIL_VERIFICATION_REQUIRED'] and not user.email_verified:
-                flash('Please verify your email first.')
-                return redirect(url_for('auth.login'))
-                
+        # Check if password verification is required
+        password_valid = True
+        if current_app.config['PASSWORD_CHECK_REQUIRED']:
+            password_valid = check_password_hash(user.password, password)
+            print(f"Password check required. Result: {password_valid}")  # Debug log
+
+        # Check if user type verification is required
+        user_type_valid = True
+        if current_app.config['USER_TYPE_CHECK_REQUIRED']:
+            user_type_valid = (user_type == 'user' and isinstance(user, User)) or \
+                            (user_type == 'truck_owner' and isinstance(user, TruckOwner))
+            print(f"User type check required. Result: {user_type_valid}")  # Debug log
+
+        # Check email verification if required
+        email_verified = True
+        if current_app.config['EMAIL_VERIFICATION_REQUIRED']:
+            email_verified = user.email_verified
+            print(f"Email verification required. Result: {email_verified}")  # Debug log
+
+        if user and password_valid and user_type_valid and email_verified:
             login_user(user)
             print(f"Login successful for: {email}")  # Debug log
             if user_type == 'user':

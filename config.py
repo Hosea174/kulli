@@ -19,5 +19,8 @@ class Config:
     # Mapbox settings
     MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
     
-    # Email verification
-    EMAIL_VERIFICATION_REQUIRED = os.getenv('EMAIL_VERIFICATION_REQUIRED', 'FALSE').lower() == 'false'
+    # Security settings
+    EMAIL_VERIFICATION_REQUIRED = os.getenv('EMAIL_VERIFICATION_REQUIRED', 'FALSE').lower() == 'true'
+    PASSWORD_CHECK_REQUIRED = os.getenv('PASSWORD_CHECK_REQUIRED', 'TRUE').lower() == 'true'
+    USER_TYPE_CHECK_REQUIRED = os.getenv('USER_TYPE_CHECK_REQUIRED', 'TRUE').lower() == 'true'
+    DEBUG_MODE = os.getenv('DEBUG_MODE', 'FALSE').lower() == 'true'
