@@ -94,32 +94,67 @@ def create_trip_route():
     response1 = requests.get(url1)
     response2 = requests.get(url2)
 
-    if response1.status_code == 200 and response2.status_code == 200:
-        pickup_data = response1.json()['features'][0]['properties']
-        destination_data = response2.json()['features'][0]['properties']
-        
-        pickup_coordinates = pickup_data['coordinates']
-        destination_coordinates = destination_data['coordinates']
-        
-        pickup_location = pickup_data.get('full_address', pickup_data.get('name', 'Unknown location'))
-        destination = destination_data.get('full_address', destination_data.get('name', 'Unknown location'))
-    else:
-        flash("Error in geocoding request")
+    if response1.status_code != 200 or response2.status_code != 200:
+        print(f"Geocoding API error - Pickup status: {response1.status_code}, Destination status: {response2.status_code}")
+        flash("Could not find the locations. Please check the addresses and try again.")
         return redirect(url_for('user_dashboard'))
+
+    try:
+        pickup_data = response1.json()
+        destination_data = response2.json()
+        
+        if not pickup_data['features'] or not destination_data['features']:
+            print(f"No features found - Pickup: {pickup_data}, Destination: {destination_data}")
+            flash("Could not find coordinates for the locations. Please try different addresses.")
+            return redirect(url_for('user_dashboard'))
+            
+        pickup_coords = pickup_data['features'][0]['geometry']['coordinates']
+        dest_coords = destination_data['features'][0]['geometry']['coordinates']
+        
+        pickup_coordinates = {
+            'longitude': pickup_coords[0],
+            'latitude': pickup_coords[1]
+        }
+        destination_coordinates = {
+            'longitude': dest_coords[0],
+            'latitude': dest_coords[1]
+        }
+        
+        pickup_location = pickup_data['features'][0].get('properties', {}).get('full_address', 
+            pickup_data['features'][0].get('properties', {}).get('name', 'Unknown location'))
+        destination = destination_data['features'][0].get('properties', {}).get('full_address', 
+            destination_data['features'][0].get('properties', {}).get('name', 'Unknown location'))
+            
+        print(f"Geocoding successful - Pickup: {pickup_location}, Destination: {destination}")
     
+    # Check if coordinates are valid
+    if not all(isinstance(coord, (int, float)) for coord in pickup_coordinates.values()) or \
+       not all(isinstance(coord, (int, float)) for coord in destination_coordinates.values()):
+        print(f"Invalid coordinates - Pickup: {pickup_coordinates}, Destination: {destination_coordinates}")
+        flash("Invalid location coordinates. Please try different addresses.")
+        return redirect(url_for('user_dashboard'))
+
     mapbox_url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{pickup_coordinates['longitude']},{pickup_coordinates['latitude']};{destination_coordinates['longitude']},{destination_coordinates['latitude']}?access_token={mapbox_token}"
-    response = requests.get(mapbox_url)
-    trip_data = response.json()
+    print(f"Mapbox Directions API URL: {mapbox_url}")
     
-    print(f"Mapbox Directions API response: {trip_data}")  # Debug log
-    
-    if response.status_code != 200:
-        flash("Error getting directions from Mapbox")
-        return redirect(url_for('user_dashboard'))
+    try:
+        response = requests.get(mapbox_url)
+        trip_data = response.json()
         
-    if 'routes' not in trip_data or len(trip_data['routes']) == 0:
-        flash("Could not calculate route between locations")
-        return redirect(url_for('user_dashboard'))
+        print(f"Mapbox Directions API response: {trip_data}")  # Debug log
+        
+        if response.status_code != 200:
+            print(f"Mapbox Directions API error - Status: {response.status_code}, Response: {trip_data}")
+            flash("Could not calculate route. Please check the locations and try again.")
+            return redirect(url_for('user_dashboard'))
+            
+        if 'routes' not in trip_data or len(trip_data['routes']) == 0:
+            print(f"No routes found in response: {trip_data}")
+            if 'message' in trip_data:
+                flash(f"Mapbox error: {trip_data['message']}")
+            else:
+                flash("No route found between these locations. Please try different addresses.")
+            return redirect(url_for('user_dashboard'))
         
     try:
         est_distance = round(trip_data['routes'][0]['distance'] / 1000, 2) # in km
