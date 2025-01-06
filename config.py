@@ -5,7 +5,7 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY')
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///instance/truck_delivery.db'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(os.path.dirname(__file__), 'instance/truck_delivery.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Mail settings

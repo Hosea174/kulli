@@ -171,5 +171,9 @@ def autocomplete():
 
 if __name__ == '__main__':
     with app.app_context():
+        # Create instance directory if it doesn't exist
+        instance_path = os.path.join(os.path.dirname(__file__), 'instance')
+        if not os.path.exists(instance_path):
+            os.makedirs(instance_path)
         db.create_all()
     app.run(debug=True)
