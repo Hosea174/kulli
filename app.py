@@ -32,10 +32,10 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    user = User.query.get(int(user_id))
+    user = db.session.get(User, int(user_id))
     if user:
         return user
-    truck_owner = TruckOwner.query.get(int(user_id))
+    truck_owner = db.session.get(TruckOwner, int(user_id))
     if truck_owner:
         return truck_owner
     return None
@@ -95,11 +95,14 @@ def create_trip_route():
     response2 = requests.get(url2)
 
     if response1.status_code == 200 and response2.status_code == 200:
-        pickup_coordinates = response1.json()['features'][0]['properties']['coordinates']
-        destination_coordinates = response2.json()['features'][1]['properties']['coordinates']
-
-        pickup_location = response1.json()['features'][0]['properties']['full_address']
-        destination = response2.json()['features'][0]['properties']['full_address']
+        pickup_data = response1.json()['features'][0]['properties']
+        destination_data = response2.json()['features'][0]['properties']
+        
+        pickup_coordinates = pickup_data['coordinates']
+        destination_coordinates = destination_data['coordinates']
+        
+        pickup_location = pickup_data.get('full_address', pickup_data.get('name', 'Unknown location'))
+        destination = destination_data.get('full_address', destination_data.get('name', 'Unknown location'))
     else:
         flash("Error in geocoding request")
         return redirect(url_for('user_dashboard'))
