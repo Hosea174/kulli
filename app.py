@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from flask_login import LoginManager
 import requests
 from crud import create_trip, get_user_trips, get_waiting_trips, update_trip_status
-from extensions import db
+from extensions import db, mail
 from models import User, TruckOwner
 
 # Load environment variables
