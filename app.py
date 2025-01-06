@@ -24,8 +24,8 @@ app.config['MAPBOX_TOKEN'] = os.getenv('MAPBOX_TOKEN')
 
 # Initialize extensions
 db.init_app(app)
+mail.init_app(app)
 login_manager = LoginManager(app)
-mail = Mail(app)
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
