@@ -164,6 +164,19 @@ def create_trip_route():
                 flash("No route found between these locations. Please try different addresses.")
             return redirect(url_for('user_dashboard'))
         
+        try:
+            est_distance = round(trip_data['routes'][0]['distance'] / 1000, 2) # in km
+            est_duration = round(trip_data['routes'][0]['duration'] / 60, 2) # in mins
+            est_price = calculate_price(est_distance, truck_type)
+        except KeyError as e:
+            print(f"Error parsing Mapbox response: {str(e)}")
+            flash("Error calculating trip details")
+            return redirect(url_for('user_dashboard'))
+        except Exception as e:
+            print(f"Unexpected error calculating trip details: {str(e)}")
+            flash("Error processing trip details")
+            return redirect(url_for('user_dashboard'))
+        
     try:
         est_distance = round(trip_data['routes'][0]['distance'] / 1000, 2) # in km
         est_duration = round(trip_data['routes'][0]['duration'] / 60, 2) # in mins
