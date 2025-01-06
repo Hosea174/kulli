@@ -24,12 +24,14 @@ def register_user():
             flash('Email already exists')
             return redirect(url_for('auth.register_user'))
         
+        verification_token = str(uuid.uuid4()) if current_app.config['EMAIL_VERIFICATION_REQUIRED'] else None
         new_user = User(
             email=email,
             name=name,
             phone=phone,
             password=generate_password_hash(password, method='pbkdf2:sha256'),
-            email_verified=True  # Skip verification for now
+            email_verified=not current_app.config['EMAIL_VERIFICATION_REQUIRED'],
+            verification_token=verification_token
         )
         
         db.session.add(new_user)
@@ -56,6 +58,7 @@ def register_truck_owner():
             flash('Email already exists')
             return redirect(url_for('auth.register_truck_owner'))
         
+        verification_token = str(uuid.uuid4()) if current_app.config['EMAIL_VERIFICATION_REQUIRED'] else None
         new_owner = TruckOwner(
             email=email,
             name=name,
@@ -63,7 +66,8 @@ def register_truck_owner():
             password=generate_password_hash(password, method='pbkdf2:sha256'),
             license_plate=license_plate,
             truck_type=truck_type,
-            email_verified=True  # Skip verification for now
+            email_verified=not current_app.config['EMAIL_VERIFICATION_REQUIRED'],
+            verification_token=verification_token
         )
         
         db.session.add(new_owner)
@@ -151,6 +155,10 @@ def login():
             print(f"Email verified: {user.email_verified}")  # Debug log
             
         if user and check_password_hash(user.password, password):
+            if current_app.config['EMAIL_VERIFICATION_REQUIRED'] and not user.email_verified:
+                flash('Please verify your email first.')
+                return redirect(url_for('auth.login'))
+                
             login_user(user)
             print(f"Login successful for: {email}")  # Debug log
             if user_type == 'user':
