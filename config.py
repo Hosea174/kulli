@@ -9,9 +9,10 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Mail settings
-    MAIL_SERVER = 'smtp.zoho.com'
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
+    MAIL_SERVER = 'smtp.zoho.eu'  # Try EU server if you're in Europe
+    MAIL_PORT = 465  # Try port 465 with SSL
+    MAIL_USE_SSL = True  # Changed from TLS to SSL
+    MAIL_USE_TLS = False
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     

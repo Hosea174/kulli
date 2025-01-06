@@ -83,13 +83,24 @@ def register_truck_owner():
     return render_template('auth/register_truck_owner.html')
 
 def send_verification_email(email, token):
-    msg = Message('Verify your email',
-                  sender='kulli@zoho.com',
-                  recipients=[email])
-    verification_url = url_for('auth.verify_email', token=token, _external=True)
-    msg.body = f'Click the following link to verify your email: {verification_url}'
-    mail.send(msg)
-    print(f"Verification email sent to {email} with token: {token}")
+    try:
+        msg = Message('Verify your email',
+                    sender='kulli@zoho.com',
+                    recipients=[email])
+        verification_url = url_for('auth.verify_email', token=token, _external=True)
+        msg.body = f'Click the following link to verify your email: {verification_url}'
+        
+        # Test SMTP connection
+        with mail.connect() as conn:
+            print("SMTP connection successful!")
+            conn.send(msg)
+            print(f"Verification email sent to {email} with token: {token}")
+            
+    except Exception as e:
+        print(f"Failed to send verification email: {str(e)}")
+        # Store the verification email in a queue or database for retry later
+        # You can implement a background task to retry sending later
+        flash('We encountered an issue sending the verification email. Please try again later.')
 
 @auth.route('/verify-email/<token>')
 def verify_email(token):
@@ -160,3 +171,13 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+@auth.route('/test-smtp')
+def test_smtp():
+    try:
+        with mail.connect() as conn:
+            print("SMTP connection successful!")
+            return "SMTP connection successful!", 200
+    except Exception as e:
+        print(f"SMTP connection failed: {str(e)}")
+        return f"SMTP connection failed: {str(e)}", 500
