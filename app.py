@@ -102,6 +102,14 @@ def create_trip_route():
     try:
         pickup_data = response1.json()
         destination_data = response2.json()
+    except ValueError as e:
+        print(f"Invalid JSON response from geocoding API: {str(e)}")
+        flash("Invalid response from geocoding service. Please try again.")
+        return redirect(url_for('user_dashboard'))
+    except Exception as e:
+        print(f"Unexpected error processing geocoding response: {str(e)}")
+        flash("Error processing location data. Please try again.")
+        return redirect(url_for('user_dashboard'))
         
         if not pickup_data['features'] or not destination_data['features']:
             print(f"No features found - Pickup: {pickup_data}, Destination: {destination_data}")
