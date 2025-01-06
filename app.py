@@ -139,9 +139,9 @@ def create_trip_route():
         
         try:
             response = requests.get(mapbox_url)
-        trip_data = response.json()
-        
-        print(f"Mapbox Directions API response: {trip_data}")  # Debug log
+            trip_data = response.json()
+            
+            print(f"Mapbox Directions API response: {trip_data}")  # Debug log
         
         if response.status_code != 200:
             print(f"Mapbox Directions API error - Status: {response.status_code}, Response: {trip_data}")
