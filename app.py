@@ -127,14 +127,14 @@ def create_trip_route():
             
         print(f"Geocoding successful - Pickup: {pickup_location}, Destination: {destination}")
     
-    # Check if coordinates are valid
-    if not all(isinstance(coord, (int, float)) for coord in pickup_coordinates.values()) or \
-       not all(isinstance(coord, (int, float)) for coord in destination_coordinates.values()):
-        print(f"Invalid coordinates - Pickup: {pickup_coordinates}, Destination: {destination_coordinates}")
-        flash("Invalid location coordinates. Please try different addresses.")
-        return redirect(url_for('user_dashboard'))
+        # Check if coordinates are valid
+        if not all(isinstance(coord, (int, float)) for coord in pickup_coordinates.values()) or \
+           not all(isinstance(coord, (int, float)) for coord in destination_coordinates.values()):
+            print(f"Invalid coordinates - Pickup: {pickup_coordinates}, Destination: {destination_coordinates}")
+            flash("Invalid location coordinates. Please try different addresses.")
+            return redirect(url_for('user_dashboard'))
 
-    mapbox_url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{pickup_coordinates['longitude']},{pickup_coordinates['latitude']};{destination_coordinates['longitude']},{destination_coordinates['latitude']}?access_token={mapbox_token}"
+        mapbox_url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{pickup_coordinates['longitude']},{pickup_coordinates['latitude']};{destination_coordinates['longitude']},{destination_coordinates['latitude']}?access_token={mapbox_token}"
     print(f"Mapbox Directions API URL: {mapbox_url}")
     
     try:
