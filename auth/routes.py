@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required
 from extensions import db, mail
@@ -38,10 +38,12 @@ def register_user():
         print(f"New user created: {new_user.id}")  # Debug log
         
         # Send verification email
-        send_verification_email(email, verification_token)
-        
-        flash('Please check your email to verify your account')
-        return redirect(url_for('auth.login'))
+        if send_verification_email(email, verification_token):
+            flash('Please check your email to verify your account')
+            return redirect(url_for('auth.login'))
+        else:
+            flash('Failed to send verification email. Please contact support.')
+            return redirect(url_for('auth.register_user'))
     
     return render_template('auth/register_user.html')
 
@@ -84,23 +86,32 @@ def register_truck_owner():
 
 def send_verification_email(email, token):
     try:
+        print(f"Attempting to send verification email to {email}")
+        print(f"Mail server config: {current_app.config['MAIL_SERVER']}:{current_app.config['MAIL_PORT']}")
+        print(f"Mail username: {current_app.config['MAIL_USERNAME']}")
+        
         msg = Message('Verify your email',
                     sender='l.mateev@scm.bg',
                     recipients=[email])
         verification_url = url_for('auth.verify_email', token=token, _external=True)
         msg.body = f'Click the following link to verify your email: {verification_url}'
         
+        print(f"Message created, attempting to connect to SMTP server...")
+        
         # Test SMTP connection
         with mail.connect() as conn:
             print("SMTP connection successful!")
+            print(f"Sending email to {email}...")
             conn.send(msg)
             print(f"Verification email sent to {email} with token: {token}")
+            return True
             
     except Exception as e:
         print(f"Failed to send verification email: {str(e)}")
-        # Store the verification email in a queue or database for retry later
-        # You can implement a background task to retry sending later
+        import traceback
+        traceback.print_exc()
         flash('We encountered an issue sending the verification email. Please try again later.')
+        return False
 
 @auth.route('/verify-email/<token>')
 def verify_email(token):
