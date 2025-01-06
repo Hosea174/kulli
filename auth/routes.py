@@ -16,8 +16,11 @@ def register_user():
         phone = request.form.get('phone')
         password = request.form.get('password')
         
+        print(f"Registration attempt - Email: {email}, Name: {name}")  # Debug log
+        
         user = User.query.filter_by(email=email).first()
         if user:
+            print(f"User already exists: {email}")  # Debug log
             flash('Email already exists')
             return redirect(url_for('auth.register_user'))
         
@@ -32,6 +35,7 @@ def register_user():
         
         db.session.add(new_user)
         db.session.commit()
+        print(f"New user created: {new_user.id}")  # Debug log
         
         # Send verification email
         send_verification_email(email, verification_token)
@@ -115,12 +119,20 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         user_type = request.form.get('user_type')
+        
+        print(f"Login attempt - Email: {email}, Type: {user_type}")  # Debug log
 
         user = None
         if user_type == 'user':
             user = User.query.filter_by(email=email).first()
+            print(f"Found user: {user}")  # Debug log
         elif user_type == 'truck_owner':
             user = TruckOwner.query.filter_by(email=email).first()
+            print(f"Found truck owner: {user}")  # Debug log
+            
+        if user:
+            print(f"Password check: {check_password_hash(user.password, password)}")  # Debug log
+            print(f"Email verified: {user.email_verified}")  # Debug log
             
         if user and check_password_hash(user.password, password):
             if not user.email_verified:
@@ -128,6 +140,7 @@ def login():
                 return redirect(url_for('auth.login'))
             
             login_user(user)
+            print(f"Login successful for: {email}")  # Debug log
             if user_type == 'user':
                 return redirect(url_for('user_dashboard'))
             elif user_type == 'truck_owner':
