@@ -20,4 +20,4 @@ class Config:
     MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
     
     # Email verification
-    EMAIL_VERIFICATION_REQUIRED = os.getenv('EMAIL_VERIFICATION_REQUIRED', 'True').lower() == 'true'
+    EMAIL_VERIFICATION_REQUIRED = os.getenv('EMAIL_VERIFICATION_REQUIRED', 'FALSE').lower() == 'false'
