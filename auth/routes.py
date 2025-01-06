@@ -88,28 +88,32 @@ def send_verification_email(email, token):
                   recipients=[email])
     verification_url = url_for('auth.verify_email', token=token, _external=True)
     msg.body = f'Click the following link to verify your email: {verification_url}'
-    # mail.send(msg)
-    print("your verification_url: ")
-    print(verification_url)
+    mail.send(msg)
+    print(f"Verification email sent to {email} with token: {token}")
 
 @auth.route('/verify-email/<token>')
 def verify_email(token):
+    print(f"Verification attempt with token: {token}")  # Debug log
+    
     user = User.query.filter_by(verification_token=token).first()
     owner = TruckOwner.query.filter_by(verification_token=token).first()
     
     if user:
+        print(f"Found user to verify: {user.email}")  # Debug log
         user.email_verified = True
         user.verification_token = None
         db.session.commit()
         flash('Your email has been verified!')
         return redirect(url_for('auth.login'))
     elif owner:
+        print(f"Found truck owner to verify: {owner.email}")  # Debug log
         owner.email_verified = True
         owner.verification_token = None
         db.session.commit()
         flash('Your email has been verified!')
         return redirect(url_for('auth.login'))
     else:
+        print("Invalid verification token")  # Debug log
         flash('Invalid verification token')
         return redirect(url_for('auth.login'))
 
