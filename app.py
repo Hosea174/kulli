@@ -135,10 +135,10 @@ def create_trip_route():
             return redirect(url_for('user_dashboard'))
 
         mapbox_url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{pickup_coordinates['longitude']},{pickup_coordinates['latitude']};{destination_coordinates['longitude']},{destination_coordinates['latitude']}?access_token={mapbox_token}"
-    print(f"Mapbox Directions API URL: {mapbox_url}")
-    
-    try:
-        response = requests.get(mapbox_url)
+        print(f"Mapbox Directions API URL: {mapbox_url}")
+        
+        try:
+            response = requests.get(mapbox_url)
         trip_data = response.json()
         
         print(f"Mapbox Directions API response: {trip_data}")  # Debug log
