@@ -110,10 +110,25 @@ def create_trip_route():
     mapbox_url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{pickup_coordinates['longitude']},{pickup_coordinates['latitude']};{destination_coordinates['longitude']},{destination_coordinates['latitude']}?access_token={mapbox_token}"
     response = requests.get(mapbox_url)
     trip_data = response.json()
-
-    est_distance = round(trip_data['routes'][0]['distance'] / 1000, 2) # in km
-    est_duration = round(trip_data['routes'][0]['duration'] / 60, 2) # in mins
-    est_price = calculate_price(est_distance, truck_type)
+    
+    print(f"Mapbox Directions API response: {trip_data}")  # Debug log
+    
+    if response.status_code != 200:
+        flash("Error getting directions from Mapbox")
+        return redirect(url_for('user_dashboard'))
+        
+    if 'routes' not in trip_data or len(trip_data['routes']) == 0:
+        flash("Could not calculate route between locations")
+        return redirect(url_for('user_dashboard'))
+        
+    try:
+        est_distance = round(trip_data['routes'][0]['distance'] / 1000, 2) # in km
+        est_duration = round(trip_data['routes'][0]['duration'] / 60, 2) # in mins
+        est_price = calculate_price(est_distance, truck_type)
+    except KeyError as e:
+        print(f"Error parsing Mapbox response: {str(e)}")
+        flash("Error calculating trip details")
+        return redirect(url_for('user_dashboard'))
 
     # store trip details in session to be used in the confirmation page...
     session['trip_data'] = {
