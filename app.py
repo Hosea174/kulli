@@ -119,11 +119,11 @@ def update_trip_status_route():
             
         # Validate status transitions
         valid_transitions = {
-            'waiting': ['truck_assigned', 'canceled'],
-            'truck_assigned': ['in_progress', 'canceled'],
-            'in_progress': ['completed', 'canceled'],
-            'completed': [],
-            'canceled': []
+            'waiting': ['waiting', 'truck_assigned', 'canceled'],
+            'truck_assigned': ['truck_assigned', 'in_progress', 'canceled'],
+            'in_progress': ['in_progress', 'completed', 'canceled'],
+            'completed': ['completed'],
+            'canceled': ['canceled']
         }
         
         if new_status not in valid_transitions.get(trip.status, []):
