@@ -433,73 +433,63 @@
   // Function to fetch suggestions from the backend
   async function fetchSuggestions(query, inputField) {
     try {
-      const url = '/api/autocomplete?query=' + encodeURIComponent(query);
-      const response = await fetch(url, {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-        }
-      });
+      const url = `/api/autocomplete?query=${encodeURIComponent(query)}`;
+      const response = await fetch(url);
       const data = await response.json();
+      console.log(data.features);
       
       // Clear existing datalist
-      const datalistId = 'suggestions-' + inputField.id;
+      let datalistId = 'suggestions-' + inputField.id;
       let existingDatalist = document.getElementById(datalistId);
       if (existingDatalist) {
         existingDatalist.remove();
       }
 
-      // Create new datalist if we have suggestions
-      if (data.features && data.features.length > 0) {
-        const datalist = document.createElement('datalist');
-        datalist.id = datalistId;
+      // Create a new datalist and populate it with suggestions
+      const datalist = document.createElement('datalist');
+      datalist.id = datalistId;
 
+      if (data.features) {
         data.features.forEach(feature => {
           const option = document.createElement('option');
-          option.value = feature.place_name || feature.text || '';
+          option.value = feature.place_name;
           datalist.appendChild(option);
         });
-
-        document.body.appendChild(datalist);
-        inputField.setAttribute('list', datalistId);
       }
+
+      // Append the datalist to the document
+      document.body.appendChild(datalist);
+
+      // Associate the datalist with the input field
+      inputField.setAttribute('list', datalistId);
     } catch (error) {
       console.error('Error fetching autocomplete suggestions:', error);
     }
   }
 
-  // Initialize autocomplete functionality
-  function initAutocomplete() {
+  // Add event listeners to the input fields for real-time autocomplete
+  document.addEventListener('DOMContentLoaded', () => {
     const pickupInput = document.getElementById('pickup_location');
     const destinationInput = document.getElementById('destination');
 
-    if (pickupInput && destinationInput) {
-      // Debounce function to limit API calls
-      const debounce = (func, delay) => {
-        let timeout;
-        return function(...args) {
-          clearTimeout(timeout);
-          timeout = setTimeout(() => func.apply(this, args), delay);
-        };
-      };
-
-      const handleInput = debounce((input, field) => {
-        if (input.length > 2) {
-          fetchSuggestions(input, field);
+    if (pickupInput) {
+      pickupInput.addEventListener('input', () => {
+        const query = pickupInput.value;
+        if (query.length > 2) {
+          fetchSuggestions(query, pickupInput);
         }
-      }, 300);
-
-      pickupInput.addEventListener('input', (e) => {
-        handleInput(e.target.value, pickupInput);
-      });
-
-      destinationInput.addEventListener('input', (e) => {
-        handleInput(e.target.value, destinationInput);
       });
     }
-  }
 
-  // Initialize when DOM is ready
-  document.addEventListener('DOMContentLoaded', initAutocomplete);
+    if (destinationInput) {
+      destinationInput.addEventListener('input', () => {
+        const query = destinationInput.value;
+        if (query.length > 2) {
+          fetchSuggestions(query, destinationInput);
+        }
+      });
+    }
+  });
 </script>
 
 
