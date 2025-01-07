@@ -5,10 +5,42 @@
 {% block content %}
 <div class="dashboard">
   <h2>Welcome, {{ current_user.name }}</h2>
-  <div class="dashboard-actions">
-    <a href="/" class="btn-primary">Create a New Trip</a>
+  
+  <div class="trip-form">
+    <h3>Create New Trip</h3>
+    <form method="POST" action="{{ url_for('create_trip_route') }}">
+      <div class="form-group">
+        <label for="pickup_location">Start Location:</label>
+        <input type="text" id="pickup_location" name="pickup_location" required autocomplete="street-address" placeholder="Enter pickup address">
+      </div>
+
+      <div class="form-group">
+        <label for="destination">End Location:</label>
+        <input type="text" id="destination" name="destination" required autocomplete="street-address" placeholder="Enter destination address">
+      </div>
+
+      <div class="form-group">
+        <label>Truck Type:</label>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="truck_type" value="small_pickup" required> 
+            <span>Small Pickup</span>
+          </label>
+          <label>
+            <input type="radio" name="truck_type" value="mid_sized" required> 
+            <span>Mid-sized Truck</span>
+          </label>
+          <label>
+            <input type="radio" name="truck_type" value="large" required> 
+            <span>Large Truck</span>
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary">Create Trip</button>
+    </form>
   </div>
-  <h3>Your Trips</h3>
+
   <h3>Your Trips</h3>
   <table class="trip-table">
     <thead>
@@ -139,32 +171,6 @@
     }
   </script>
 
-  <form method="POST" action="{{ url_for('create_trip_route') }}">
-    <div class="form-group">
-      <label for="pickup_location">Start Location:</label>
-      <input type="text" id="pickup_location" name="pickup_location" required autocomplete="street-address">
-    </div>
-
-    <div class="form-group">
-      <label for="destination">End Location:</label>
-      <input type="text" id="destination" name="destination" required autocomplete="street-address">
-    </div>
-
-    <div class="form-group">
-      <label>Truck Type:</label>
-      <label>
-        <input type="radio" name="truck_type" value="small_pickup" required> Small Pickup
-      </label>
-      <label>
-        <input type="radio" name="truck_type" value="mid_sized" required> Mid-sized Truck
-      </label>
-      <label>
-        <input type="radio" name="truck_type" value="large" required> Large Truck
-      </label>
-    </div>
-
-    <button type="submit" class="btn-primary">Continue</button>
-  </form>
 
 </div>
 
