@@ -151,8 +151,9 @@
         .then(response => response.json())
         .then(data => {
           // Update modal content with formatted data
-          document.getElementById('trip-status').textContent = data.status.replace('_', ' ').toUpperCase();
-          document.getElementById('trip-status').className = `status-badge status-${data.status}`;
+          const statusElement = document.getElementById('trip-status');
+          statusElement.textContent = data.status.replace('_', ' ').toUpperCase();
+          statusElement.className = 'status-badge status-' + data.status;
           document.getElementById('trip-pickup').textContent = data.pickup_location;
           document.getElementById('trip-destination').textContent = data.destination;
           document.getElementById('trip-created').textContent = new Date(data.created_at).toLocaleString();
