@@ -5,17 +5,82 @@
 {% block content %}
 <div class="dashboard">
   <h2>Welcome, {{ current_user.name }}</h2>
+
   <h3>Available Trips</h3>
-  <ul class="trip-list">
-    {% for trip in trips %}
-    <li>
-      <strong>{{ trip.pickup_location }}</strong> to <strong>{{ trip.destination }}</strong>
-      - Estimated Price: ${{ trip.est_price }}
-      <form method="POST" action="/">
-        <button type="submit" class="btn-primary">Accept</button>
-      </form>
-    </li>
-    {% endfor %}
-  </ul>
+  <table class="trip-table">
+    <thead>
+      <tr>
+        <th>Pickup Location</th>
+        <th>Destination</th>
+        <th>Distance</th>
+        <th>Duration</th>
+        <th>Price</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trip in trips %}
+      <tr id="trip-row-{{ trip.id }}">
+        <td>{{ trip.pickup_location }}</td>
+        <td>{{ trip.destination }}</td>
+        <td>{{ trip.est_distance }} km</td>
+        <td>{{ trip.est_duration }} mins</td>
+        <td>${{ trip.est_price }}</td>
+        <td class="trip-actions">
+          {% if trip.status == 'waiting' %}
+          <button class="btn-primary" onclick="updateTripStatus('{{ trip.id }}', 'truck_assigned')">Accept</button>
+          <button class="btn-secondary" onclick="updateTripStatus('{{ trip.id }}', 'rejected')">Reject</button>
+          {% elif trip.status == 'truck_assigned' %}
+          <button class="btn-primary" onclick="updateTripStatus('{{ trip.id }}', 'started')">Start Trip</button>
+          <button class="btn-secondary" onclick="updateTripStatus('{{ trip.id }}', 'canceled')">Cancel Trip</button>
+          {% elif trip.status == 'started' %}
+          <button class="btn-primary" onclick="updateTripStatus('{{ trip.id }}', 'completed')">Finish Trip</button>
+          {% else %}
+          <span>{{ trip.status.capitalize() }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
+
+<script>
+  async function updateTripStatus(tripId, newStatus) {
+    try {
+      const response = await fetch('/api/update_trip_status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ trip_id: tripId, new_status: newStatus })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Update the UI based on the new status
+        const row = document.getElementById(`trip-row-${tripId}`);
+        const actionsCell = row.querySelector('.trip-actions');
+
+        if (newStatus === 'truck_assigned') {
+          actionsCell.innerHTML = `
+                        <button class="btn-primary" onclick="updateTripStatus(${tripId}, 'started')">Start Trip</button>
+                        <button class="btn-secondary" onclick="updateTripStatus(${tripId}, 'canceled')">Cancel Trip</button>
+                    `;
+        } else if (newStatus === 'started') {
+          actionsCell.innerHTML = `
+                        <button class="btn-primary" onclick="updateTripStatus(${tripId}, 'completed')">Finish Trip</button>
+                    `;
+        } else if (newStatus === 'completed' || newStatus === 'canceled' || newStatus === 'rejected') {
+          actionsCell.innerHTML = `<span>${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}</span>`;
+        }
+      } else {
+        console.error('Failed to update trip status:', data.error);
+      }
+    } catch (error) {
+      console.error('Error updating trip status:', error);
+    }
+  }
+</script>
 {% endblock %}

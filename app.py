@@ -1,13 +1,11 @@
-from flask import Flask, current_app, flash, jsonify, redirect, render_template, request, session, url_for
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import LoginManager, current_user, login_required
-from flask_mail import Mail
 import os
 from dotenv import load_dotenv
 from flask_login import LoginManager
 import requests
 from crud import create_trip, get_user_trips, get_waiting_trips, update_trip_status
-from extensions import db
+from extensions import db, mail, socketio
 from models import User, TruckOwner
 
 # Load environment variables
@@ -21,11 +19,12 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(BASE_DIR, "instance/truck_delivery.db")}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAPBOX_TOKEN'] = os.getenv('MAPBOX_TOKEN')
-
 # Initialize extensions
 db.init_app(app)
+mail.init_app(app)
+socketio.init_app(app)
+
 login_manager = LoginManager(app)
-mail = Mail(app)
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -33,17 +32,14 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    user = User.query.get(int(user_id))
-    if user:
-        return user
-    truck_owner = TruckOwner.query.get(int(user_id))
-    if truck_owner:
-        return truck_owner
+    user_type = session.get('user_type')
+    if user_type == 'user':
+        return User.query.get(int(user_id))
+    elif user_type == 'truck_owner':
+        return TruckOwner.query.get(int(user_id))
     return None
 
-# Register blueprint
-from auth.routes import auth as auth_blueprint
-app.register_blueprint(auth_blueprint)
+
 
 @app.route('/')
 def index():
@@ -75,19 +71,6 @@ def create_trip_route():
 
     mapbox_token = 'sk.eyJ1IjoiY2hyaXN0ZWRsYSIsImEiOiJjbTVoc2pxcTUwbjM4MmtzZ25nZDllN2k1In0._pobdd2JUaLTehWOMZQG7w'
 
-    batch_request = {
-        "requests": [
-            {
-                "q": pickup_location,
-                "proximity": "ip"
-            },
-            {
-                "q": destination,
-                "proximity": "ip"
-            }
-        ]
-    }
-
     # Use Mapbox API to estimate distance and duration
     url1 = f"https://api.mapbox.com/search/geocode/v6/forward?q={pickup_location}&proximity=ip&access_token={mapbox_token}"
     url2 = f"https://api.mapbox.com/search/geocode/v6/forward?q={destination}&proximity=ip&access_token={mapbox_token}"
@@ -97,7 +80,7 @@ def create_trip_route():
 
     if response1.status_code == 200 and response2.status_code == 200:
         pickup_coordinates = response1.json()['features'][0]['properties']['coordinates']
-        destination_coordinates = response2.json()['features'][1]['properties']['coordinates']
+        destination_coordinates = response2.json()['features'][0]['properties']['coordinates']
 
         pickup_location = response1.json()['features'][0]['properties']['full_address']
         destination = response2.json()['features'][0]['properties']['full_address']
@@ -169,7 +152,32 @@ def autocomplete():
 
     return jsonify(response.json())
 
+@app.route('/api/update_trip_status', methods=['POST'])
+@login_required
+def update_trip_status_api():
+    trip_id = request.json.get('trip_id')
+    new_status = request.json.get('new_status')
+
+    trip = update_trip_status(trip_id, new_status)
+    if not trip:
+        return jsonify({"error": "Trip not found"}), 404
+
+    socketio.emit('trip_status_update', {
+        'trip_id': trip.id,
+        'new_status': new_status
+    }) 
+
+    return jsonify({
+        "message": "Trip status updated successfully",
+        "trip_id": trip.id,
+        "new_status": trip.status
+    })
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+
+    from auth.routes import auth as auth_blueprint
+    app.register_blueprint(auth_blueprint)
+
+    socketio.run(app, debug=True)

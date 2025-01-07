@@ -9,14 +9,31 @@
     <a href="/" class="btn-primary">Create a New Trip</a>
   </div>
   <h3>Your Trips</h3>
-  <ul class="trip-list">
-    {% for trip in trips %}
-    <li>
-      <strong>{{ trip.pickup_location }}</strong> to <strong>{{ trip.destination }}</strong>
-      - Status: {{ trip.status }}
-    </li>
-    {% endfor %}
-  </ul>
+  <table class="trip-table">
+    <thead>
+      <tr>
+        <th>Pickup Location</th>
+        <th>Destination</th>
+        <th>Distance</th>
+        <th>Duration</th>
+        <th>Price</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trip in trips %}
+      <tr id="trip-row-{{ trip.id }}">
+        <td>{{ trip.pickup_location }}</td>
+        <td>{{ trip.destination }}</td>
+        <td>{{ trip.est_distance }} km</td>
+        <td>{{ trip.est_duration }} min</td>
+        <td>${{ trip.est_price }}</td>
+        <td class="trip-status">{{ trip.status.replace('_', ' ').capitalize() }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
 
   <form method="POST" action="{{ url_for('create_trip_route') }}">
     <div class="form-group">
@@ -46,13 +63,14 @@
   </form>
 
 </div>
-
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"
+  integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
 <script>
-  // Function to fetch suggestions from the backend
+  // autocomplete data fetch using async js
   async function fetchSuggestions(query, inputField) {
     try {
       const url = `/api/autocomplete?query=${encodeURIComponent(query)}`;
-      const response = await fetch(url); // Asynchronous call to the backend
+      const response = await fetch(url);
       const data = await response.json();
       console.log(data.features)
       // Clear existing datalist
@@ -62,7 +80,7 @@
         existingDatalist.remove();
       }
 
-      // Create a new datalist and populate it with suggestions
+      // create a new datalist and add the suggestions to it
       const datalist = document.createElement('datalist');
       datalist.id = datalistId;
 
@@ -84,15 +102,14 @@
     }
   }
 
-  // Add event listeners to the input fields for real-time autocomplete
+  // Add event listeners to the location search fields for real-time autocomplete
   document.addEventListener('DOMContentLoaded', () => {
     const pickupInput = document.getElementById('pickup_location');
     const destinationInput = document.getElementById('destination');
 
-    // Listen for the "input" event on both fields
     pickupInput.addEventListener('input', () => {
       const query = pickupInput.value;
-      if (query.length > 2) { // Fetch suggestions only for queries longer than 2 characters
+      if (query.length > 2) { 
         fetchSuggestions(query, pickupInput);
       }
     });
@@ -103,6 +120,23 @@
         fetchSuggestions(query, destinationInput);
       }
     });
+
+    // update status cell of trip row in real time when a truck owner performs some action on the trip
+    const socket = io();
+    console.log(socket)
+    console.log("socket initiated")
+
+    socket.on('trip_status_update', (data) => {
+      console.log('status update received:', data);
+      const tripRow = document.querySelector(`#trip-row-${data.trip_id}`);
+
+      if (tripRow) {
+          const statusCell = tripRow.querySelector('.trip-status');
+          statusCell.textContent = data.new_status.replace('_', ' ').toUpperCase();
+      }
+
+    })
+
   });
 </script>
 

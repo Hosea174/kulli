@@ -1,13 +1,14 @@
 from models import db, User, TruckOwner, Trip
+from sqlalchemy import not_
 
-# Create a new user
+# register a new user
 def create_user(email, name, phone, password):
     user = User(email=email, name=name, phone=phone, password=password)
     db.session.add(user)
     db.session.commit()
     return user
 
-# Create a new truck owner
+# register a new truck owner
 def create_truck_owner(email, name, phone, password, license_plate, truck_type):
     owner = TruckOwner(email=email, name=name, phone=phone, password=password,
                        license_plate=license_plate, truck_type=truck_type)
@@ -37,4 +38,4 @@ def get_user_trips(user_id):
 
 # Fetch all waiting trips for truck owners
 def get_waiting_trips():
-    return Trip.query.filter_by(status='waiting').all()
+    return Trip.query.filter(not_(Trip.status.in_(['rejected']))).all()
