@@ -20,3 +20,38 @@ document.querySelectorAll('.details-btn').forEach(button => {
     }, 100);
   });
 });
+
+// Enhanced form validation for trip updates
+document.querySelectorAll('.trip-update-form').forEach(form => {
+  form.addEventListener('submit', function(e) {
+    const requiredFields = form.querySelectorAll('input[required], select[required], textarea[required]');
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+      if (!field.value.trim()) {
+        field.classList.add('error');
+        isValid = false;
+      } else {
+        field.classList.remove('error');
+      }
+    });
+
+    if (!isValid) {
+      e.preventDefault();
+      showFlashMessage('Please fill all required fields', 'error');
+    }
+  });
+});
+
+// Add error styling for invalid fields
+const errorStyle = document.createElement('style');
+errorStyle.innerHTML = `
+  .error {
+    border-color: #dc2626 !important;
+    background-color: #fee2e2 !important;
+  }
+  .error:focus {
+    outline-color: #dc2626 !important;
+  }
+`;
+document.head.appendChild(errorStyle);
