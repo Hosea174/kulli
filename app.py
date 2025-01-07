@@ -171,17 +171,17 @@ def create_trip_route():
 
             # store trip details in session to be used in the confirmation page...
             session['trip_data'] = {
-        'pickup_location': pickup_location,
-        'destination': destination,
-        'pickup_coordinates': [pickup_coordinates['longitude'], pickup_coordinates['latitude']],
-        'destination_coordinates': [destination_coordinates['longitude'] , destination_coordinates['latitude']],
-        'truck_type': truck_type,
-        'est_distance': est_distance,
-        'est_duration': est_duration,
-        'est_price': est_price
-    }
+                'pickup_location': pickup_location,
+                'destination': destination,
+                'pickup_coordinates': [pickup_coordinates['longitude'], pickup_coordinates['latitude']],
+                'destination_coordinates': [destination_coordinates['longitude'] , destination_coordinates['latitude']],
+                'truck_type': truck_type,
+                'est_distance': est_distance,
+                'est_duration': est_duration,
+                'est_price': est_price
+            }
 
-    return redirect(url_for('confirm_trip_page'))
+            return redirect(url_for('confirm_trip_page'))
 
 def calculate_price(distance, truck_type):
     start_prices = {'small_pickup': 500, 'mid_sized': 1500, 'large': 3000}
