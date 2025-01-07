@@ -292,17 +292,27 @@
             method: 'POST',
             body: formData,
             headers: {
+              'Accept': 'application/json',
               'X-Requested-With': 'XMLHttpRequest'
             }
           });
-          
-          const data = await response.json();
+
+          // Check content type before parsing
+          const contentType = response.headers.get('content-type');
+          let data;
+          if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+          } else {
+            // Handle HTML response (likely a redirect)
+            window.location.reload();
+            return;
+          }
           
           if (!response.ok) {
             throw new Error(data.message || 'Server error');
           }
           
-          if (data.success) {
+          if (data && data.success) {
             // Show success feedback
             const tripId = form.querySelector('input[name="trip_id"]').value;
             const statusBadge = document.querySelector(`.trip-row[data-trip-id="${tripId}"] .status-badge`);
@@ -322,7 +332,7 @@
               location.reload();
             }, 1000);
           } else {
-            throw new Error(data.message || 'Update failed');
+            throw new Error((data && data.message) || 'Update failed');
           }
         } catch (error) {
           console.error('Update error:', error);
