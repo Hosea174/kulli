@@ -141,6 +141,19 @@
           <span class="detail-label">Price:</span>
           €<span id="trip-act-price"></span>
           <button id="accept-price-btn" class="btn-secondary" style="display:none; margin-left:1rem">Accept Price</button>
+          <button id="reject-price-btn" class="btn-secondary" style="display:none; margin-left:1rem">Request Adjustment</button>
+        </div>
+        
+        <div class="status-controls" style="margin-top: 1rem;">
+          <h4>Trip Status</h4>
+          <select id="trip-status-select" class="status-select">
+            <option value="waiting">Waiting</option>
+            <option value="truck_assigned">Truck Assigned</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="canceled">Canceled</option>
+          </select>
+          <button id="update-status-btn" class="btn-secondary" style="margin-left:1rem">Update Status</button>
         </div>
         
         <h4>Cargo Details</h4>
@@ -188,6 +201,56 @@
         document.querySelectorAll('.truck-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById('truck_type').value = btn.dataset.type;
+      });
+    });
+
+    rejectBtn?.addEventListener('click', function() {
+      const reason = prompt('Please specify what adjustments are needed:');
+      if (reason) {
+        fetch('/request-price-adjustment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            trip_id: tripId,
+            reason: reason
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Adjustment request sent to truck owner');
+            this.style.display = 'none';
+          } else {
+            alert('Error sending request: ' + (data.message || 'Unknown error'));
+          }
+        });
+      }
+    });
+
+    // Handle status updates
+    updateStatusBtn?.addEventListener('click', function() {
+      const newStatus = statusSelect.value;
+      
+      fetch('/update-trip-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          trip_id: tripId,
+          status: newStatus
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Status updated successfully');
+          location.reload();
+        } else {
+          alert('Error updating status: ' + (data.message || 'Unknown error'));
+        }
       });
     });
 
@@ -243,13 +306,22 @@
             gpsLink.style.display = 'none';
           }
 
-          // Show accept price button if status is truck_assigned
+          // Show price controls based on status
           const acceptPriceBtn = document.getElementById('accept-price-btn');
+          const rejectPriceBtn = document.getElementById('reject-price-btn');
+          
           if (data.status === 'truck_assigned' && data.actual_price) {
             acceptPriceBtn.style.display = 'inline-block';
+            rejectPriceBtn.style.display = 'inline-block';
           } else {
             acceptPriceBtn.style.display = 'none';
+            rejectPriceBtn.style.display = 'none';
           }
+
+          // Set status select value
+          statusSelect.value = data.status;
+          updateStatusBtn.style.display = data.status !== 'completed' && 
+                                        data.status !== 'canceled' ? 'inline-block' : 'none';
 
           // Update cargo details
           document.getElementById('trip-cargo-description').textContent = 
