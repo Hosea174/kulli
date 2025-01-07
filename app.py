@@ -114,8 +114,25 @@ def update_trip_status_route():
             return jsonify({'success': False, 'message': 'Missing required fields'}), 400
             
         trip = Trip.query.get(trip_id)
-        if not trip or (trip.user_id != current_user.id and trip.truck_owner_id != current_user.id):
-            return jsonify({'success': False, 'message': 'Invalid trip update request'}), 403
+        if not trip:
+            return jsonify({'success': False, 'message': 'Trip not found'}), 404
+            
+        # Allow updates from either the user or truck owner
+        is_user = trip.user_id == current_user.id
+        is_truck_owner = trip.truck_owner_id == current_user.id
+        
+        if not (is_user or is_truck_owner):
+            return jsonify({
+                'success': False, 
+                'message': 'You are not authorized to update this trip'
+            }), 403
+            
+        # Additional validation based on user role
+        if is_truck_owner and trip.status == 'waiting':
+            return jsonify({
+                'success': False,
+                'message': 'Truck owners cannot update waiting trips'
+            }), 403
             
         # Validate status transitions
         valid_transitions = {

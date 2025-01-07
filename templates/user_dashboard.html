@@ -341,9 +341,14 @@
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRFToken': '{{ csrf_token() }}'  // Add CSRF token for security
             },
-            body: JSON.stringify(jsonData)
+            body: JSON.stringify({
+              ...jsonData,
+              user_id: {{ current_user.id }},  // Include current user ID
+              is_truck_owner: {{ 'true' if current_user.__class__.__name__ == 'TruckOwner' else 'false' }}
+            })
           });
 
           const data = await response.json();
