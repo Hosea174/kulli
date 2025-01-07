@@ -265,10 +265,12 @@
     });
 
     // Handle toggle buttons
-    document.querySelectorAll('.toggle-details').forEach(button => {
-      button.addEventListener('click', function() {
-        const tripId = this.dataset.tripId;
+    document.addEventListener('click', function(e) {
+      if (e.target && e.target.classList.contains('toggle-details')) {
+        const tripId = e.target.dataset.tripId;
         const detailsRow = document.getElementById(`details-${tripId}`);
+        
+        if (!detailsRow) return;
         
         // Close all other open details
         document.querySelectorAll('.trip-details').forEach(row => {
@@ -278,12 +280,12 @@
         });
         
         // Toggle current details
-        if (detailsRow.style.display === 'none') {
+        if (detailsRow.style.display === 'none' || !detailsRow.style.display) {
           detailsRow.style.display = 'table-row';
         } else {
           detailsRow.style.display = 'none';
         }
-      });
+      }
     });
 
     // Handle close buttons
