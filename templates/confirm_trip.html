@@ -74,41 +74,68 @@
 
     // Draw the actual driving route
     map.on('load', () => {
-      const routeGeometry = JSON.parse(mapElement.dataset.routeGeometry);
-      
-      map.addSource('route', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: routeGeometry
+      try {
+        const routeGeometry = JSON.parse(mapElement.dataset.routeGeometry);
+        
+        // Ensure the route geometry is valid
+        if (!routeGeometry || !routeGeometry.coordinates || !Array.isArray(routeGeometry.coordinates)) {
+          console.error('Invalid route geometry:', routeGeometry);
+          return;
         }
-      });
 
-      map.addLayer({
-        id: 'route',
-        type: 'line',
-        source: 'route',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': '#007bff',
-          'line-width': 5,
-          'line-opacity': 0.75
-        }
-      });
+        // Add the route source
+        map.addSource('route', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: routeGeometry.coordinates
+            }
+          }
+        });
 
-      // Fit the map to the route bounds
-      const coordinates = routeGeometry.coordinates;
-      const bounds = coordinates.reduce((bounds, coord) => {
-        return bounds.extend(coord);
-      }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+        // Add the route layer
+        map.addLayer({
+          id: 'route',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': '#007bff',
+            'line-width': 5,
+            'line-opacity': 0.75
+          }
+        });
 
-      map.fitBounds(bounds, {
-        padding: 50
-      });
+        // Fit the map to the route bounds
+        const coordinates = routeGeometry.coordinates;
+        const bounds = coordinates.reduce((bounds, coord) => {
+          return bounds.extend(coord);
+        }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+        map.fitBounds(bounds, {
+          padding: 50
+        });
+
+        // Add markers for start and end points
+        new mapboxgl.Marker({ color: 'green' })
+          .setLngLat(coordinates[0])
+          .setPopup(new mapboxgl.Popup().setText("Start Location"))
+          .addTo(map);
+
+        new mapboxgl.Marker({ color: 'red' })
+          .setLngLat(coordinates[coordinates.length - 1])
+          .setPopup(new mapboxgl.Popup().setText("End Location"))
+          .addTo(map);
+
+      } catch (error) {
+        console.error('Error loading route:', error);
+      }
     });
   });
 </script>
