@@ -1,6 +1,6 @@
-# Kulli - Truck Delivery Platform
+# Lazzar - Truck Delivery Platform
 
-Kulli is a Flask-based web application that connects truck owners with users who need load transportation services. It provides a platform for users to request trips and truck owners to accept them, with integrated mapping and pricing functionality.
+Lazzar is a Flask-based web application that connects truck owners with users who need load transportation services. It provides a platform for users to request trips and truck owners to accept them, with integrated mapping and pricing functionality.
 
 ## Features
 
@@ -48,8 +48,8 @@ Kulli is a Flask-based web application that connects truck owners with users who
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/kulli.git
-cd kulli
+git clone https://github.com/yourusername/lazzar.git
+cd lazzar
 ```
 
 2. Create and activate a virtual environment:
