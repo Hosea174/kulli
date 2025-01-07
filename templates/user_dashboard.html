@@ -16,7 +16,7 @@
       
       <div class="form-row">
         <input type="text" name="notes" placeholder="Additional notes (optional)">
-        <input type="url" name="ecmr_link" placeholder="eCMR link (optional)">
+        <input type="text" name="ecmr_link" placeholder="eCMR link (optional)">
       </div>
       
       <div class="truck-type-buttons">
@@ -58,7 +58,7 @@
           </span>
         </td>
         <td>
-          <button class="btn-secondary" onclick="showTripDetails({{ trip.id }})">
+          <button class="btn-secondary" onclick="showTripDetails('{{ trip.id }}')">
             View Details
           </button>
         </td>
@@ -176,12 +176,22 @@
             data.notes ? data.notes : 'N/A';
             
           const ecmrLink = document.getElementById('trip-ecmr-link');
-          ecmrLink.textContent = data.ecmr_link ? 'View eCMR' : 'N/A';
-          ecmrLink.href = data.ecmr_link || '#';
+          if (data.ecmr_link) {
+            ecmrLink.textContent = 'View eCMR';
+            ecmrLink.href = data.ecmr_link;
+            ecmrLink.style.display = 'inline';
+          } else {
+            ecmrLink.style.display = 'none';
+          }
           
           const gpsLink = document.getElementById('trip-gps-link');
-          gpsLink.textContent = data.gps_tracking_link ? 'Track GPS' : 'N/A';
-          gpsLink.href = data.gps_tracking_link || '#';
+          if (data.gps_tracking_link) {
+            gpsLink.textContent = 'Track GPS';
+            gpsLink.href = data.gps_tracking_link;
+            gpsLink.style.display = 'inline';
+          } else {
+            gpsLink.style.display = 'none';
+          }
             
           modal.style.display = 'block';
         });
