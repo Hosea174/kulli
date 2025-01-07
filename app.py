@@ -15,18 +15,20 @@ load_dotenv()
 
 
 def calculate_price(distance, truck_type):
-    """Calculate trip price in ETB based on distance and truck type.
-    Returns price converted to EURO at 1 ETB = 0.016 EURO"""
-    # Base prices in ETB
-    start_prices = {'small_pickup': 500, 'mid_sized': 1500, 'large': 3000}
-    # Per km rates in ETB
-    base_rates = {'small_pickup': 10.5, 'mid_sized': 20.5, 'large': 40.0}
+    """Calculate trip price in EURO based on distance and truck type.
+    Uses per km rates: 1.32€/km (large), 1.2€/km (medium), 0.95€/km (small)"""
+    # Per km rates in EURO
+    rates = {
+        'small_pickup': 0.95,
+        'mid_sized': 1.2,
+        'large': 1.32
+    }
     
-    # Calculate total price in ETB
-    price_etb = start_prices[truck_type] + (distance * base_rates[truck_type])
+    # Calculate total price in EURO
+    price = distance * rates[truck_type]
     
-    # Convert to EURO and round to 2 decimal places
-    return round(price_etb * 0.016, 2)
+    # Round to 2 decimal places
+    return round(price, 2)
 
 # Initialize Flask app
 app = Flask(__name__)
