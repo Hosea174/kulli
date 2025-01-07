@@ -62,13 +62,23 @@
             View Details
           </button>
           {% if trip.status == 'waiting' %}
+          {% if trip.status == 'waiting' %}
           <form method="POST" action="{{ url_for('update_trip_status_route') }}" class="trip-update-form">
             <input type="hidden" name="trip_id" value="{{ trip.id }}">
             <select name="status" class="status-select" onchange="this.form.submit()">
-              <option value="waiting" {% if trip.status == 'waiting' %}selected{% endif %}>Waiting</option>
+              <option value="waiting" selected>Waiting</option>
               <option value="canceled">Canceled</option>
             </select>
           </form>
+          {% elif trip.status != 'waiting' %}
+          <form method="POST" action="{{ url_for('update_trip_status_route') }}" class="trip-update-form">
+            <input type="hidden" name="trip_id" value="{{ trip.id }}">
+            <select name="status" class="status-select" onchange="this.form.submit()">
+              <option value="{{ trip.status }}" selected>{{ trip.status|replace('_', ' ')|title }}</option>
+              <option value="completed">Completed</option>
+            </select>
+          </form>
+          {% endif %}
           {% elif trip.status != 'waiting' %}
           <form method="POST" action="{{ url_for('update_trip_status_route') }}" class="trip-update-form">
             <input type="hidden" name="trip_id" value="{{ trip.id }}">
