@@ -42,6 +42,7 @@
               <option value="truck_assigned" {% if trip.status == 'truck_assigned' %}selected{% endif %}>Truck Assigned</option>
               <option value="started" {% if trip.status == 'started' %}selected{% endif %}>Started</option>
               <option value="completed" {% if trip.status == 'completed' %}selected{% endif %}>Completed</option>
+              <option value="canceled" {% if trip.status == 'canceled' %}selected{% endif %}>Canceled</option>
             </select>
             <button type="submit" class="btn-secondary">Update</button>
           </form>
