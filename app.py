@@ -75,7 +75,17 @@ def user_dashboard():
 def truck_owner_dashboard():
     if request.method == 'POST':
         trip_id = request.form.get('trip_id')
-        update_trip_status(trip_id, 'truck_assigned')
+        if trip_id:
+            trip = update_trip_status(trip_id, 'truck_assigned')
+            if trip:
+                trip.truck_owner_id = current_user.id
+                db.session.commit()
+                flash('Trip accepted successfully!')
+            else:
+                flash('Could not find trip')
+        else:
+            flash('No trip selected')
+        return redirect(url_for('truck_owner_dashboard'))
         
     print("Logged-in user:", current_user.name, current_user.email, current_user.id)
     trips = get_waiting_trips()

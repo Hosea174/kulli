@@ -11,7 +11,8 @@
     <li>
       <strong>{{ trip.pickup_location }}</strong> to <strong>{{ trip.destination }}</strong>
       - Estimated Price: ${{ trip.est_price }}
-      <form method="POST" action="/">
+      <form method="POST" action="{{ url_for('truck_owner_dashboard') }}">
+        <input type="hidden" name="trip_id" value="{{ trip.id }}">
         <button type="submit" class="btn-primary">Accept</button>
       </form>
     </li>
