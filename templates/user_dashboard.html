@@ -114,6 +114,19 @@
           <span class="detail-label">Price:</span>
           €<span id="trip-act-price"></span>
         </div>
+        <h4>Additional Information</h4>
+        <div class="detail-row">
+          <span class="detail-label">Notes:</span>
+          <span id="trip-notes"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">eCMR Link:</span>
+          <a id="trip-ecmr-link" target="_blank"></a>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">GPS Tracking:</span>
+          <a id="trip-gps-link" target="_blank"></a>
+        </div>
       </div>
     </div>
   </div>
@@ -156,6 +169,18 @@
             data.actual.duration ? (data.actual.duration / 60).toFixed(1) : 'N/A';
           document.getElementById('trip-act-price').textContent = 
             data.actual.price ? data.actual.price.toFixed(2) : 'N/A';
+            
+          // Additional fields
+          document.getElementById('trip-notes').textContent = 
+            data.notes ? data.notes : 'N/A';
+            
+          const ecmrLink = document.getElementById('trip-ecmr-link');
+          ecmrLink.textContent = data.ecmr_link ? 'View eCMR' : 'N/A';
+          ecmrLink.href = data.ecmr_link || '#';
+          
+          const gpsLink = document.getElementById('trip-gps-link');
+          gpsLink.textContent = data.gps_tracking_link ? 'Track GPS' : 'N/A';
+          gpsLink.href = data.gps_tracking_link || '#';
             
           modal.style.display = 'block';
         });

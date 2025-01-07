@@ -106,9 +106,19 @@ def update_trip_status_route():
     new_status = request.form.get('status')
     
     if trip_id and new_status:
-        trip = update_trip_status_in_db(trip_id, new_status)
+        trip = Trip.query.get(trip_id)
         if trip and trip.truck_owner_id == current_user.id:
-            flash('Trip status updated successfully!')
+            # Update status and other fields
+            trip.status = new_status
+            trip.actual_distance = float(request.form.get('actual_distance')) if request.form.get('actual_distance') else None
+            trip.actual_duration = float(request.form.get('actual_duration')) if request.form.get('actual_duration') else None
+            trip.actual_price = float(request.form.get('actual_price')) if request.form.get('actual_price') else None
+            trip.notes = request.form.get('notes')
+            trip.ecmr_link = request.form.get('ecmr_link')
+            trip.gps_tracking_link = request.form.get('gps_tracking_link')
+            
+            db.session.commit()
+            flash('Trip details updated successfully!')
         else:
             flash('Invalid trip update request')
     

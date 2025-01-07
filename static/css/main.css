@@ -397,3 +397,35 @@ pre {
   border-radius: 0.25rem;
   border: 1px solid var(--border-color);
 }
+
+.trip-update-form {
+  background: var(--background-color);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+.trip-update-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.trip-update-form label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.trip-update-form input,
+.trip-update-form select,
+.trip-update-form textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.trip-update-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
