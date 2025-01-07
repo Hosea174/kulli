@@ -276,37 +276,87 @@
       });
     });
 
-    // Handle form submissions
+    // Handle form submissions with better error handling
     document.querySelectorAll('.trip-update-form').forEach(form => {
-      form.addEventListener('submit', function(e) {
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        const formData = new FormData(this);
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Updating...';
         
-        fetch(this.action, {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+        try {
+          const formData = new FormData(this);
+          const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || 'Server error');
           }
-        })
-        .then(response => response.json())
-        .then(data => {
+          
           if (data.success) {
-            // Close the details and refresh the table row
+            // Show success feedback
             const tripId = form.querySelector('input[name="trip_id"]').value;
+            const statusBadge = document.querySelector(`.trip-row[data-trip-id="${tripId}"] .status-badge`);
+            
+            // Update status badge if it exists
+            if (statusBadge) {
+              statusBadge.className = `status-badge status-${data.new_status}`;
+              statusBadge.textContent = data.new_status.replace('_', ' ').title();
+            }
+            
+            // Close details and show success message
             document.getElementById(`details-${tripId}`).style.display = 'none';
-            location.reload(); // Refresh to show updated data
+            showFlashMessage('Trip updated successfully!', 'success');
+            
+            // Refresh data after 1 second
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
           } else {
-            alert('Error updating trip: ' + (data.message || 'Unknown error'));
+            throw new Error(data.message || 'Update failed');
           }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('Error updating trip');
-        });
+        } catch (error) {
+          console.error('Update error:', error);
+          showFlashMessage(`Error: ${error.message}`, 'error');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalBtnText;
+        }
       });
     });
+
+    // Helper function to show flash messages
+    function showFlashMessage(message, type = 'info') {
+      const flashDiv = document.createElement('div');
+      flashDiv.className = `flash-message flash-${type}`;
+      flashDiv.textContent = message;
+      
+      // Add to flash container
+      const flashContainer = document.querySelector('.flash-messages') || createFlashContainer();
+      flashContainer.appendChild(flashDiv);
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        flashDiv.remove();
+      }, 5000);
+    }
+
+    // Create flash container if it doesn't exist
+    function createFlashContainer() {
+      const container = document.createElement('div');
+      container.className = 'flash-messages';
+      document.body.appendChild(container);
+      return container;
+    }
   </script>
 
 
