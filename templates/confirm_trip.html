@@ -8,9 +8,9 @@
   <p><strong>Start Location:</strong> {{ trip_data['pickup_location'] }}</p>
   <p><strong>End Location:</strong> {{ trip_data['destination'] }}</p>
   <p><strong>Truck Type:</strong> {{ trip_data['truck_type'].replace('_', ' ').title() }}</p>
-  <p><strong>Estimated Distance:</strong> {{ trip_data['est_distance'] }} km</p>
-  <p><strong>Estimated Duration:</strong> {{ trip_data['est_duration'] }} mins</p>
-  <p><strong>Estimated Price:</strong> ETB {{ trip_data['est_price'] }}</p>
+  <p><strong>Estimated Distance:</strong> {{ "%.2f"|format(trip_data['est_distance']) }} km</p>
+  <p><strong>Estimated Duration:</strong> {{ "%.1f"|format(trip_data['est_duration'] / 60) }} hours</p>
+  <p><strong>Estimated Price:</strong> €{{ "%.2f"|format(trip_data['est_price']) }}</p>
 
   <form method="POST" action="{{ url_for('confirm_trip') }}">
     <input type="hidden" name="pickup_location" value="{{ trip_data['pickup_location'] }}">
