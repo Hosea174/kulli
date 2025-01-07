@@ -132,7 +132,13 @@ def update_trip_status_route():
         else:
             flash('Invalid trip update request')
     
-    return redirect(url_for('truck_owner_dashboard'))
+    # Redirect based on user type
+    if isinstance(current_user, User):
+        return redirect(url_for('user_dashboard'))
+    elif isinstance(current_user, TruckOwner):
+        return redirect(url_for('truck_owner_dashboard'))
+    else:
+        return redirect(url_for('index'))
 
 @app.route('/truck-owner/dashboard', methods=['GET', 'POST'])
 @login_required
