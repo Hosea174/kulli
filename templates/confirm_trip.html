@@ -28,7 +28,8 @@
     data-pickup-longitude="{{ trip_data['pickup_coordinates'][0] }}"
     data-pickup-latitude="{{ trip_data['pickup_coordinates'][1] }}"
     data-destination-longitude="{{ trip_data['destination_coordinates'][0] }}"
-    data-destination-latitude="{{ trip_data['destination_coordinates'][1] }}"></div>
+    data-destination-latitude="{{ trip_data['destination_coordinates'][1] }}"
+    data-route-geometry="{{ trip_data['route_geometry'] | tojson | safe }}"></div>
 </div>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
