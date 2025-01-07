@@ -6,8 +6,7 @@
 <div class="dashboard">
   <div class="dashboard-controls">
       <div class="compact-trip-form">
-    <form method="POST" action="{{ url_for('create_trip_route') }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <form method="POST" action="{{ url_for('create_trip_route') }}" id="trip-form">
       <div class="form-row">
         <input type="text" id="pickup_location" name="pickup_location" required 
                placeholder="Pickup address" autocomplete="street-address">
@@ -300,6 +299,11 @@
     document.querySelectorAll('.trip-update-form').forEach(form => {
       form.addEventListener('submit', async function(e) {
         e.preventDefault();
+        
+        // Add CSRF token to form data
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        const formData = new FormData(this);
+        formData.append('csrf_token', csrfToken);
         
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.textContent;
