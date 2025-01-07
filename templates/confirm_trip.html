@@ -71,16 +71,16 @@
       .setPopup(new mapboxgl.Popup().setText("Destination"))
       .addTo(map);
 
-    // Draw a line between the two locations
+    // Draw the actual driving route
     map.on('load', () => {
+      const routeGeometry = JSON.parse(mapElement.dataset.routeGeometry);
+      
       map.addSource('route', {
         type: 'geojson',
         data: {
           type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: [pickupCoordinates, destinationCoordinates]
-          }
+          properties: {},
+          geometry: routeGeometry
         }
       });
 
@@ -94,8 +94,19 @@
         },
         paint: {
           'line-color': '#007bff',
-          'line-width': 5
+          'line-width': 5,
+          'line-opacity': 0.75
         }
+      });
+
+      // Fit the map to the route bounds
+      const coordinates = routeGeometry.coordinates;
+      const bounds = coordinates.reduce((bounds, coord) => {
+        return bounds.extend(coord);
+      }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+      map.fitBounds(bounds, {
+        padding: 50
       });
     });
   });

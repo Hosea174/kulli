@@ -206,7 +206,8 @@ def create_trip_route():
         'truck_type': truck_type,
         'est_distance': est_distance,
         'est_duration': est_duration,
-        'est_price': est_price
+        'est_price': est_price,
+        'route_geometry': trip_data['routes'][0]['geometry']  # Add the full route geometry
     }
 
     return redirect(url_for('confirm_trip_page'))
