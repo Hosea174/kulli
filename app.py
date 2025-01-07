@@ -70,6 +70,23 @@ def user_dashboard():
     trips = get_user_trips(current_user.id)
     return render_template('user_dashboard.html', trips=trips)
 
+@app.route('/update-trip-status', methods=['POST'])
+@login_required
+def update_trip_status():
+    trip_id = request.form.get('trip_id')
+    new_status = request.form.get('status')
+    
+    if trip_id and new_status:
+        trip = Trip.query.get(trip_id)
+        if trip and trip.truck_owner_id == current_user.id:
+            trip.status = new_status
+            db.session.commit()
+            flash('Trip status updated successfully!')
+        else:
+            flash('Invalid trip update request')
+    
+    return redirect(url_for('truck_owner_dashboard'))
+
 @app.route('/truck-owner/dashboard', methods=['GET', 'POST'])
 @login_required
 def truck_owner_dashboard():
@@ -88,7 +105,7 @@ def truck_owner_dashboard():
         return redirect(url_for('truck_owner_dashboard'))
         
     print("Logged-in user:", current_user.name, current_user.email, current_user.id)
-    trips = get_waiting_trips()
+    trips = get_truck_owner_trips(current_user.id)
     return render_template('truck_owner_dashboard.html', trips=trips)
 
 @app.route('/create_trip', methods=['POST'])

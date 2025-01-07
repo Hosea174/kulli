@@ -35,6 +35,9 @@ def update_trip_status(trip_id, status):
 def get_user_trips(user_id):
     return Trip.query.filter_by(user_id=user_id).all()
 
-# Fetch all waiting trips for truck owners
-def get_waiting_trips():
-    return Trip.query.filter_by(status='waiting').all()
+# Fetch trips for truck owners
+def get_truck_owner_trips(truck_owner_id):
+    return Trip.query.filter(
+        (Trip.truck_owner_id == truck_owner_id) | 
+        (Trip.status == 'waiting')
+    ).order_by(Trip.status.desc(), Trip.created_at.desc()).all()
