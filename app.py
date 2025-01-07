@@ -168,11 +168,10 @@ def update_trip_status_route():
 def truck_owner_dashboard():
     if request.method == 'POST':
         trip_id = request.form.get('trip_id')
-        if trip_id:
-            trip = update_trip_status_in_db(trip_id, 'truck_assigned')
+        truck_owner_id = request.form.get('truck_owner_id')
+        if trip_id and truck_owner_id:
+            trip = update_trip_status_in_db(trip_id, 'truck_assigned', truck_owner_id)
             if trip:
-                trip.truck_owner_id = current_user.id
-                db.session.commit()
                 flash('Trip accepted successfully!')
             else:
                 flash('Could not find trip')

@@ -56,6 +56,11 @@
           <span class="status-badge status-{{ trip.status }}">
             {{ trip.status|replace('_', ' ')|title }}
           </span>
+          {% if trip.truck_owner %}
+          <div class="truck-owner-info">
+            Assigned to: {{ trip.truck_owner.name }} ({{ trip.truck_owner.phone }})
+          </div>
+          {% endif %}
         </td>
         <td>
           <button class="btn-secondary toggle-details" data-trip-id="{{ trip.id }}">

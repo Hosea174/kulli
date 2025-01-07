@@ -154,6 +154,7 @@
         <td>
           <form method="POST" action="{{ url_for('truck_owner_dashboard') }}">
             <input type="hidden" name="trip_id" value="{{ trip.id }}">
+            <input type="hidden" name="truck_owner_id" value="{{ current_user.id }}">
             <button type="submit" class="btn-primary">Accept</button>
           </form>
         </td>

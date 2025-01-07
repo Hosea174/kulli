@@ -24,10 +24,12 @@ def create_trip(user_id, pickup_location, destination, est_duration, est_distanc
     return trip
 
 # Update trip status
-def update_trip_status_in_db(trip_id, status):
+def update_trip_status_in_db(trip_id, status, truck_owner_id=None):
     trip = Trip.query.get(trip_id)
     if trip:
         trip.status = status
+        if truck_owner_id:
+            trip.truck_owner_id = truck_owner_id
         db.session.commit()
     return trip
 

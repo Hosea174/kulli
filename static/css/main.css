@@ -427,6 +427,15 @@ pre {
   font-weight: 500;
 }
 
+.truck-owner-info {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #666;
+  padding: 0.25rem;
+  background: #f5f5f5;
+  border-radius: 0.25rem;
+}
+
 .status-waiting {
   background: #fef3c7;
   color: #92400e;
