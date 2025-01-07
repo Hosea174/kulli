@@ -72,10 +72,23 @@
       .setPopup(new mapboxgl.Popup().setText("Destination"))
       .addTo(map);
 
+    // Initialize markers first
+    new mapboxgl.Marker({ color: 'green' })
+      .setLngLat(pickupCoordinates)
+      .setPopup(new mapboxgl.Popup().setText("Pickup Location"))
+      .addTo(map);
+
+    new mapboxgl.Marker({ color: 'blue' })
+      .setLngLat(destinationCoordinates)
+      .setPopup(new mapboxgl.Popup().setText("Destination"))
+      .addTo(map);
+
     // Draw the actual driving route
     map.on('load', () => {
       try {
+        console.log('Route geometry data:', mapElement.dataset.routeGeometry);
         const routeGeometry = JSON.parse(mapElement.dataset.routeGeometry);
+        console.log('Parsed route geometry:', routeGeometry);
         
         // Ensure the route geometry is valid
         if (!routeGeometry || !routeGeometry.coordinates || !Array.isArray(routeGeometry.coordinates)) {
@@ -121,17 +134,6 @@
         map.fitBounds(bounds, {
           padding: 50
         });
-
-        // Add markers for start and end points
-        new mapboxgl.Marker({ color: 'green' })
-          .setLngLat(coordinates[0])
-          .setPopup(new mapboxgl.Popup().setText("Start Location"))
-          .addTo(map);
-
-        new mapboxgl.Marker({ color: 'red' })
-          .setLngLat(coordinates[coordinates.length - 1])
-          .setPopup(new mapboxgl.Popup().setText("End Location"))
-          .addTo(map);
 
       } catch (error) {
         console.error('Error loading route:', error);
