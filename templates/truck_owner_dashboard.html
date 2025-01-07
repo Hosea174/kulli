@@ -40,12 +40,14 @@
             <input type="hidden" name="trip_id" value="{{ trip.id }}">
             <div class="form-group">
               <label>Status:</label>
-              <select name="status" class="status-select">
-                <option value="waiting" {% if trip.status == 'waiting' %}selected{% endif %}>Waiting</option>
-                <option value="truck_assigned" {% if trip.status == 'truck_assigned' %}selected{% endif %}>Truck Assigned</option>
-                <option value="started" {% if trip.status == 'started' %}selected{% endif %}>Started</option>
-                <option value="completed" {% if trip.status == 'completed' %}selected{% endif %}>Completed</option>
-                <option value="canceled" {% if trip.status == 'canceled' %}selected{% endif %}>Canceled</option>
+              <select name="status" class="status-select" onchange="this.form.submit()">
+                <option value="{{ trip.status }}" selected>{{ trip.status|replace('_', ' ')|title }}</option>
+                {% if trip.status != 'completed' and trip.status != 'canceled' %}
+                  <option value="completed">Completed</option>
+                {% endif %}
+                {% if trip.status == 'waiting' %}
+                  <option value="canceled">Canceled</option>
+                {% endif %}
               </select>
             </div>
             
