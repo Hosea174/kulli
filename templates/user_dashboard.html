@@ -7,6 +7,7 @@
   <div class="dashboard-controls">
       <div class="compact-trip-form">
     <form method="POST" action="{{ url_for('create_trip_route') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-row">
         <input type="text" id="pickup_location" name="pickup_location" required 
                placeholder="Pickup address" autocomplete="street-address">
