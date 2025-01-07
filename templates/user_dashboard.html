@@ -51,7 +51,7 @@
         <td>{{ trip.pickup_location }}</td>
         <td>{{ trip.destination }}</td>
         <td>{{ "%.2f"|format(trip.est_distance) }} km</td>
-        <td>€{{ "%.2f"|format(trip.est_price) }}</td>
+        <td>€{{ "%.2f"|format(trip.est_price or 0) }}</td>
         <td>
           <span class="status-badge status-{{ trip.status }}">
             {{ trip.status|replace('_', ' ')|title }}
