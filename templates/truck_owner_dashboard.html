@@ -42,10 +42,14 @@
               <label>Status:</label>
               <select name="status" class="status-select" onchange="this.form.submit()">
                 <option value="{{ trip.status }}" selected>{{ trip.status|replace('_', ' ')|title }}</option>
-                {% if trip.status != 'completed' and trip.status != 'canceled' %}
-                  <option value="completed">Completed</option>
-                {% endif %}
                 {% if trip.status == 'waiting' %}
+                  <option value="truck_assigned">Truck Assigned</option>
+                  <option value="canceled">Canceled</option>
+                {% elif trip.status == 'truck_assigned' %}
+                  <option value="in_progress">In Progress</option>
+                  <option value="canceled">Canceled</option>
+                {% elif trip.status == 'in_progress' %}
+                  <option value="completed">Completed</option>
                   <option value="canceled">Canceled</option>
                 {% endif %}
               </select>

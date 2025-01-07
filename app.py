@@ -109,15 +109,20 @@ def update_trip_status_route():
         trip = Trip.query.get(trip_id)
         if trip and (trip.user_id == current_user.id or trip.truck_owner_id == current_user.id):
             # Validate status transitions
-            if trip.status == 'waiting' and new_status not in ['waiting', 'canceled']:
-                flash('Invalid status transition from waiting')
-                return redirect(url_for('user_dashboard'))
-            elif trip.status != 'waiting' and new_status == 'completed':
-                # Only allow completion of active trips
-                pass
-            elif new_status not in ['waiting', 'canceled', 'completed']:
-                flash('Invalid status transition')
-                return redirect(url_for('user_dashboard'))
+            valid_transitions = {
+                'waiting': ['truck_assigned', 'canceled'],
+                'truck_assigned': ['in_progress', 'canceled'],
+                'in_progress': ['completed', 'canceled'],
+                'completed': [],
+                'canceled': []
+            }
+            
+            if new_status not in valid_transitions.get(trip.status, []):
+                flash(f'Invalid status transition from {trip.status} to {new_status}')
+                if isinstance(current_user, User):
+                    return redirect(url_for('user_dashboard'))
+                else:
+                    return redirect(url_for('truck_owner_dashboard'))
             # Update status and other fields
             trip.status = new_status
             trip.actual_distance = float(request.form.get('actual_distance')) if request.form.get('actual_distance') else None
