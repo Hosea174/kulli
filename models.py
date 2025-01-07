@@ -43,3 +43,8 @@ class Trip(db.Model):
     ecmr_link = db.Column(db.String(200))
     gps_tracking_link = db.Column(db.String(200))
     additional_data = db.Column(db.JSON, default={})  # For storing extra parameters
+    cargo_description = db.Column(db.String(500))
+    cargo_weight = db.Column(db.Float)
+    cargo_volume = db.Column(db.Float)
+    special_requirements = db.Column(db.String(500))
+    documents = db.Column(db.JSON, default=[])  # List of document URLs

@@ -19,7 +19,7 @@
     </thead>
     <tbody>
       {% for trip in trips.my_trips %}
-      <tr>
+      <tr class="trip-row" data-trip-id="{{ trip.id }}">
         <td>{{ trip.pickup_location }}</td>
         <td>{{ trip.destination }}</td>
         <td>{{ "%.2f"|format(trip.est_distance) }} km</td>
@@ -30,69 +30,84 @@
           </span>
         </td>
         <td>
-          {% if trip.status == 'waiting' %}
-          <form method="POST" action="{{ url_for('truck_owner_dashboard') }}">
-            <input type="hidden" name="trip_id" value="{{ trip.id }}">
-            <button type="submit" class="btn-primary">Accept</button>
-          </form>
-          {% else %}
+          <button class="btn-secondary toggle-details" data-trip-id="{{ trip.id }}">
+            {% if trip.status == 'waiting' %}Accept{% else %}Details{% endif %}
+          </button>
+        </td>
+      </tr>
+      <tr class="trip-details" id="details-{{ trip.id }}" style="display: none;">
+        <td colspan="7">
           <form method="POST" action="{{ url_for('update_trip_status_route') }}" class="trip-update-form">
             <input type="hidden" name="trip_id" value="{{ trip.id }}">
-            <div class="form-group">
-              <label>Status:</label>
-              <select name="status" class="status-select" onchange="this.form.submit()">
-                <option value="{{ trip.status }}" selected>{{ trip.status|replace('_', ' ')|title }}</option>
-                {% if trip.status == 'waiting' %}
-                  <option value="truck_assigned">Truck Assigned</option>
-                  <option value="canceled">Canceled</option>
-                {% elif trip.status == 'truck_assigned' %}
-                  <option value="in_progress">In Progress</option>
-                  <option value="canceled">Canceled</option>
-                {% elif trip.status == 'in_progress' %}
-                  <option value="completed">Completed</option>
-                  <option value="canceled">Canceled</option>
-                {% endif %}
-              </select>
+            
+            <div class="form-columns">
+              <div class="form-column">
+                <div class="form-group">
+                  <label>Status:</label>
+                  <select name="status" class="status-select">
+                    <option value="{{ trip.status }}" selected>{{ trip.status|replace('_', ' ')|title }}</option>
+                    {% if trip.status == 'waiting' %}
+                      <option value="truck_assigned">Truck Assigned</option>
+                      <option value="canceled">Canceled</option>
+                    {% elif trip.status == 'truck_assigned' %}
+                      <option value="in_progress">In Progress</option>
+                      <option value="canceled">Canceled</option>
+                    {% elif trip.status == 'in_progress' %}
+                      <option value="completed">Completed</option>
+                      <option value="canceled">Canceled</option>
+                    {% endif %}
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label>Actual Distance (km):</label>
+                  <input type="number" step="0.01" name="actual_distance" 
+                         value="{{ trip.actual_distance if trip.actual_distance else '' }}">
+                </div>
+                
+                <div class="form-group">
+                  <label>Actual Duration (hours):</label>
+                  <input type="number" step="0.1" name="actual_duration" 
+                         value="{{ trip.actual_duration if trip.actual_duration else '' }}">
+                </div>
+                
+                <div class="form-group">
+                  <label>Actual Price (€):</label>
+                  <input type="number" step="0.01" name="actual_price" 
+                         value="{{ trip.actual_price if trip.actual_price else '' }}">
+                </div>
+              </div>
+              
+              <div class="form-column">
+                <div class="form-group">
+                  <label>Notes:</label>
+                  <textarea name="notes">{{ trip.notes if trip.notes else '' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label>eCMR Link:</label>
+                  <input type="url" name="ecmr_link" 
+                         value="{{ trip.ecmr_link if trip.ecmr_link else '' }}">
+                </div>
+                
+                <div class="form-group">
+                  <label>GPS Tracking Link:</label>
+                  <input type="url" name="gps_tracking_link" 
+                         value="{{ trip.gps_tracking_link if trip.gps_tracking_link else '' }}">
+                </div>
+                
+                <div class="form-group">
+                  <label>Additional Data (JSON):</label>
+                  <textarea name="additional_data">{{ trip.additional_data if trip.additional_data else '{}' }}</textarea>
+                </div>
+              </div>
             </div>
             
-            <div class="form-group">
-              <label>Actual Distance (km):</label>
-              <input type="number" step="0.01" name="actual_distance" 
-                     value="{{ trip.actual_distance if trip.actual_distance else '' }}">
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Update Trip</button>
+              <button type="button" class="btn-secondary close-details" data-trip-id="{{ trip.id }}">Close</button>
             </div>
-            
-            <div class="form-group">
-              <label>Actual Duration (hours):</label>
-              <input type="number" step="0.1" name="actual_duration" 
-                     value="{{ trip.actual_duration if trip.actual_duration else '' }}">
-            </div>
-            
-            <div class="form-group">
-              <label>Actual Price (€):</label>
-              <input type="number" step="0.01" name="actual_price" 
-                     value="{{ trip.actual_price if trip.actual_price else '' }}">
-            </div>
-            
-            <div class="form-group">
-              <label>Notes:</label>
-              <textarea name="notes">{{ trip.notes if trip.notes else '' }}</textarea>
-            </div>
-            
-            <div class="form-group">
-              <label>eCMR Link:</label>
-              <input type="url" name="ecmr_link" 
-                     value="{{ trip.ecmr_link if trip.ecmr_link else '' }}">
-            </div>
-            
-            <div class="form-group">
-              <label>GPS Tracking Link:</label>
-              <input type="url" name="gps_tracking_link" 
-                     value="{{ trip.gps_tracking_link if trip.gps_tracking_link else '' }}">
-            </div>
-            
-            <button type="submit" class="btn-primary">Update Trip</button>
           </form>
-          {% endif %}
         </td>
       </tr>
       {% endfor %}
@@ -134,4 +149,72 @@
     </tbody>
   </table>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle toggle buttons
+    document.querySelectorAll('.toggle-details').forEach(button => {
+      button.addEventListener('click', function() {
+        const tripId = this.dataset.tripId;
+        const detailsRow = document.getElementById(`details-${tripId}`);
+        
+        // Close all other open details
+        document.querySelectorAll('.trip-details').forEach(row => {
+          if (row.id !== `details-${tripId}`) {
+            row.style.display = 'none';
+          }
+        });
+        
+        // Toggle current details
+        if (detailsRow.style.display === 'none') {
+          detailsRow.style.display = 'table-row';
+        } else {
+          detailsRow.style.display = 'none';
+        }
+      });
+    });
+
+    // Handle close buttons
+    document.querySelectorAll('.close-details').forEach(button => {
+      button.addEventListener('click', function() {
+        const tripId = this.dataset.tripId;
+        document.getElementById(`details-${tripId}`).style.display = 'none';
+      });
+    });
+
+    // Handle form submissions
+    document.querySelectorAll('.trip-update-form').forEach(form => {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Close the details and refresh the table row
+            const tripId = form.querySelector('input[name="trip_id"]').value;
+            document.getElementById(`details-${tripId}`).style.display = 'none';
+            location.reload(); // Refresh to show updated data
+          } else {
+            alert('Error updating trip: ' + (data.message || 'Unknown error'));
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error updating trip');
+        });
+      });
+    });
+  });
+</script>
 {% endblock %}
