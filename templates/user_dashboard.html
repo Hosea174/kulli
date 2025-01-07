@@ -363,8 +363,10 @@
             const statusBadge = document.querySelector(`.trip-row[data-trip-id="${tripId}"] .status-badge`);
             
             if (statusBadge) {
-              statusBadge.className = `status-badge status-${data.new_status}`;
-              statusBadge.textContent = data.new_status.replace('_', ' ').title();
+              if (data.new_status) {
+                statusBadge.className = `status-badge status-${data.new_status}`;
+                statusBadge.textContent = data.new_status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+              }
             }
             
             // Update other displayed values

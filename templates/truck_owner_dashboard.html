@@ -231,8 +231,10 @@
             
             // Update status badge if it exists
             if (statusBadge) {
-              statusBadge.className = `status-badge status-${data.new_status}`;
-              statusBadge.textContent = data.new_status.replace('_', ' ').title();
+              if (data.new_status) {
+                statusBadge.className = `status-badge status-${data.new_status}`;
+                statusBadge.textContent = data.new_status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+              }
             }
             
             // Close details and show success message
