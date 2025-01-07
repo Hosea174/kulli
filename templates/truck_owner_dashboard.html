@@ -36,7 +36,7 @@
             <button type="submit" class="btn-primary">Accept</button>
           </form>
           {% else %}
-          <form method="POST" action="{{ url_for('update_trip_status') }}">
+          <form method="POST" action="{{ url_for('update_trip_status_route') }}">
             <input type="hidden" name="trip_id" value="{{ trip.id }}">
             <select name="status" class="status-select">
               <option value="waiting" {% if trip.status == 'waiting' %}selected{% endif %}>Waiting</option>

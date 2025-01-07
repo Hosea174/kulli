@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 from flask_login import LoginManager
 import requests
-from crud import create_trip, get_user_trips, get_truck_owner_trips, update_trip_status
+from crud import create_trip, get_user_trips, get_truck_owner_trips, update_trip_status_in_db
 from models import Trip
 from extensions import db, mail
 from models import User, TruckOwner
@@ -101,15 +101,13 @@ def get_trip_details(trip_id):
 
 @app.route('/update-trip-status', methods=['POST'])
 @login_required
-def update_trip_status():
+def update_trip_status_route():
     trip_id = request.form.get('trip_id')
     new_status = request.form.get('status')
     
     if trip_id and new_status:
-        trip = Trip.query.get(trip_id)
+        trip = update_trip_status_in_db(trip_id, new_status)
         if trip and trip.truck_owner_id == current_user.id:
-            trip.status = new_status
-            db.session.commit()
             flash('Trip status updated successfully!')
         else:
             flash('Invalid trip update request')
@@ -122,7 +120,7 @@ def truck_owner_dashboard():
     if request.method == 'POST':
         trip_id = request.form.get('trip_id')
         if trip_id:
-            trip = update_trip_status(trip_id, 'truck_assigned')
+            trip = update_trip_status_in_db(trip_id, 'truck_assigned')
             if trip:
                 trip.truck_owner_id = current_user.id
                 db.session.commit()
