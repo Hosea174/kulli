@@ -14,6 +14,11 @@ from models import User, TruckOwner
 load_dotenv()
 
 
+def calculate_price(distance, truck_type):
+    start_prices = {'small_pickup': 500, 'mid_sized': 1500, 'large': 3000}
+    base_rates = {'small_pickup': 10.5, 'mid_sized': 20.5, 'large': 40.0}
+    return start_prices[truck_type] + round(distance * base_rates[truck_type], 2)
+
 # Initialize Flask app
 app = Flask(__name__)
 app.config.from_object('config.Config')
@@ -182,11 +187,6 @@ def create_trip_route():
             }
 
             return redirect(url_for('confirm_trip_page'))
-
-def calculate_price(distance, truck_type):
-    start_prices = {'small_pickup': 500, 'mid_sized': 1500, 'large': 3000}
-    base_rates = {'small_pickup': 10.5, 'mid_sized': 20.5, 'large': 40.0}
-    return start_prices[truck_type] + round(distance * base_rates[truck_type], 2)
 
 @app.route('/confirm_trip_page')
 @login_required
