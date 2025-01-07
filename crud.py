@@ -37,14 +37,16 @@ def get_user_trips(user_id):
 
 # Fetch trips for truck owners
 def get_truck_owner_trips(truck_owner_id):
-    # Get trips assigned to this truck owner
+    # Get trips assigned to this truck owner (regardless of status)
     my_trips = Trip.query.filter(
-        Trip.truck_owner_id == truck_owner_id
+        (Trip.truck_owner_id == truck_owner_id) &
+        (Trip.status != 'waiting')
     ).order_by(Trip.created_at.desc()).all()
     
-    # Get available trips (status = waiting)
+    # Get available trips (status = waiting and not assigned to any truck owner)
     available_trips = Trip.query.filter(
-        Trip.status == 'waiting'
+        (Trip.status == 'waiting') &
+        (Trip.truck_owner_id.is_(None))
     ).order_by(Trip.created_at.desc()).all()
     
     return {
