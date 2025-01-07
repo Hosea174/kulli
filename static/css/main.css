@@ -34,13 +34,24 @@ body {
   text-decoration: none;
 }
 
+.navbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
 .navbar-menu a {
   color: var(--text-color);
   text-decoration: none;
-  margin-left: 1.5rem;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   transition: all 0.2s;
+}
+
+.welcome-message {
+  font-weight: 500;
+  color: var(--text-color);
+  margin-right: 0.5rem;
 }
 
 .navbar-menu a:hover {

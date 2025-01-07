@@ -4,9 +4,7 @@
 
 {% block content %}
 <div class="dashboard">
-  <div class="dashboard-header">
-    <h2>Welcome, {{ current_user.name }}</h2>
-    <div class="dashboard-controls">
+  <div class="dashboard-controls">
       <div class="compact-trip-form">
     <form method="POST" action="{{ url_for('create_trip_route') }}">
       <div class="form-row">
