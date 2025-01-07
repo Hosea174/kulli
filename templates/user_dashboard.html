@@ -254,14 +254,24 @@
       });
     });
 
-    // Get the modal
+    // Get the modal elements
     const modal = document.getElementById('trip-details-modal');
-    const modalContent = document.getElementById('trip-details-content');
     const span = document.getElementsByClassName('close')[0];
+    const statusSelect = document.getElementById('trip-status-select');
+    const updateStatusBtn = document.getElementById('update-status-btn');
 
     function showTripDetails(tripId) {
+      // Show the modal
+      modal.style.display = 'block';
+      
+      // Fetch trip details
       fetch(`/api/trip/${tripId}`)
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
         .then(data => {
           // Update modal content with formatted data
           const statusElement = document.getElementById('trip-status');
@@ -351,18 +361,31 @@
           }
             
           modal.style.display = 'block';
+        })
+        .catch(error => {
+          console.error('Error fetching trip details:', error);
+          alert('Error loading trip details. Please try again.');
         });
     }
 
+    // Close modal when clicking X
     span.onclick = function() {
       modal.style.display = 'none';
     }
 
+    // Close modal when clicking outside
     window.onclick = function(event) {
       if (event.target == modal) {
         modal.style.display = 'none';
       }
     }
+
+    // Close modal with ESC key
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape' && modal.style.display === 'block') {
+        modal.style.display = 'none';
+      }
+    });
   </script>
 
 
