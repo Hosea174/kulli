@@ -38,6 +38,7 @@
       <tr class="trip-details" id="details-{{ trip.id }}" style="display: none;">
         <td colspan="7">
           <form method="POST" action="{{ url_for('update_trip_status_route') }}" class="trip-update-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="trip_id" value="{{ trip.id }}">
             <input type="hidden" name="truck_owner_id" value="{{ current_user.id }}">
             
@@ -153,6 +154,7 @@
         </td>
         <td>
           <form method="POST" action="{{ url_for('truck_owner_dashboard') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="trip_id" value="{{ trip.id }}">
             <input type="hidden" name="truck_owner_id" value="{{ current_user.id }}">
             <button type="submit" class="btn-primary">Accept</button>
@@ -214,7 +216,8 @@
             method: 'POST',
             body: formData,
             headers: {
-              'X-Requested-With': 'XMLHttpRequest'
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
             }
           });
           
