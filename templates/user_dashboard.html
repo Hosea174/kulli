@@ -432,7 +432,12 @@
   async function fetchSuggestions(query, inputField) {
     try {
       const url = '/api/autocomplete?query=' + encodeURIComponent(query);
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+        }
+      });
       const data = await response.json();
       
       // Clear existing datalist

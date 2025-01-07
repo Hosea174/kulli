@@ -404,12 +404,14 @@ def autocomplete():
     
     bbox = "-17.625, -34.833, 51.208, 37.349"
     mapbox_url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json?access_token={mapbox_token}&bbox={bbox}"
-    response = requests.get(mapbox_url)
-
-    if response.status_code != 200:
-        return jsonify({"error": "Failed to fetch suggestions"}), response.status_code
-
-    return jsonify(response.json())
+    
+    try:
+        response = requests.get(mapbox_url)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        current_app.logger.error(f"Mapbox API error: {str(e)}")
+        return jsonify({"error": "Failed to fetch suggestions"}), 500
 
 if __name__ == '__main__':
     with app.app_context():
