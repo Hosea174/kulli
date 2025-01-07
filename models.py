@@ -39,4 +39,7 @@ class Trip(db.Model):
     actual_distance = db.Column(db.Float, default=None)  # Initially NULL
     actual_price = db.Column(db.Float, default=None)  # Initially NULL
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.String(500))
+    ecmr_link = db.Column(db.String(200))
+    gps_tracking_link = db.Column(db.String(200))
     additional_data = db.Column(db.JSON, default={})  # For storing extra parameters

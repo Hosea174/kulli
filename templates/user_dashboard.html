@@ -4,16 +4,21 @@
 
 {% block content %}
 <div class="dashboard">
-  <h2>Welcome, {{ current_user.name }}</h2>
-  
-  <div class="compact-trip-form">
-    <h3>New Trip</h3>
+  <div class="dashboard-header">
+    <h2>Welcome, {{ current_user.name }}</h2>
+    <div class="dashboard-controls">
+      <div class="compact-trip-form">
     <form method="POST" action="{{ url_for('create_trip_route') }}">
       <div class="form-row">
         <input type="text" id="pickup_location" name="pickup_location" required 
                placeholder="Pickup address" autocomplete="street-address">
         <input type="text" id="destination" name="destination" required 
                placeholder="Destination address" autocomplete="street-address">
+      </div>
+      
+      <div class="form-row">
+        <input type="text" name="notes" placeholder="Additional notes (optional)">
+        <input type="url" name="ecmr_link" placeholder="eCMR link (optional)">
       </div>
       
       <div class="truck-type-buttons">
@@ -23,7 +28,10 @@
         <input type="hidden" name="truck_type" id="truck_type" required>
       </div>
       
-      <button type="submit" class="btn-primary">Create Trip</button>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Create Trip</button>
+        <a href="#" class="btn-secondary gps-link">Track GPS</a>
+      </div>
     </form>
   </div>
 
