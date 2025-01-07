@@ -107,7 +107,17 @@ def update_trip_status_route():
     
     if trip_id and new_status:
         trip = Trip.query.get(trip_id)
-        if trip and trip.truck_owner_id == current_user.id:
+        if trip and (trip.user_id == current_user.id or trip.truck_owner_id == current_user.id):
+            # Validate status transitions
+            if trip.status == 'waiting' and new_status not in ['waiting', 'canceled']:
+                flash('Invalid status transition from waiting')
+                return redirect(url_for('user_dashboard'))
+            elif trip.status != 'waiting' and new_status == 'completed':
+                # Only allow completion of active trips
+                pass
+            elif new_status not in ['waiting', 'canceled', 'completed']:
+                flash('Invalid status transition')
+                return redirect(url_for('user_dashboard'))
             # Update status and other fields
             trip.status = new_status
             trip.actual_distance = float(request.form.get('actual_distance')) if request.form.get('actual_distance') else None
