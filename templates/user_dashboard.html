@@ -204,7 +204,7 @@
   // Function to fetch suggestions from the backend
   async function fetchSuggestions(query, inputField) {
     try {
-      const url = `/api/autocomplete?query=${encodeURIComponent(query)}`;
+      const url = '/api/autocomplete?query=' + encodeURIComponent(query);
       const response = await fetch(url); // Asynchronous call to the backend
       const data = await response.json();
       console.log(data.features)
