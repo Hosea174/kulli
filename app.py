@@ -102,48 +102,66 @@ def get_trip_details(trip_id):
 @app.route('/update-trip-status', methods=['POST'])
 @login_required
 def update_trip_status_route():
-    trip_id = request.form.get('trip_id')
-    new_status = request.form.get('status')
-    
-    if trip_id and new_status:
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+            
+        trip_id = data.get('trip_id')
+        new_status = data.get('status')
+        
+        if not trip_id or not new_status:
+            return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+            
         trip = Trip.query.get(trip_id)
-        if trip and (trip.user_id == current_user.id or trip.truck_owner_id == current_user.id):
-            # Validate status transitions
-            valid_transitions = {
-                'waiting': ['truck_assigned', 'canceled'],
-                'truck_assigned': ['in_progress', 'canceled'],
-                'in_progress': ['completed', 'canceled'],
-                'completed': [],
-                'canceled': []
+        if not trip or (trip.user_id != current_user.id and trip.truck_owner_id != current_user.id):
+            return jsonify({'success': False, 'message': 'Invalid trip update request'}), 403
+            
+        # Validate status transitions
+        valid_transitions = {
+            'waiting': ['truck_assigned', 'canceled'],
+            'truck_assigned': ['in_progress', 'canceled'],
+            'in_progress': ['completed', 'canceled'],
+            'completed': [],
+            'canceled': []
+        }
+        
+        if new_status not in valid_transitions.get(trip.status, []):
+            return jsonify({
+                'success': False,
+                'message': f'Invalid status transition from {trip.status} to {new_status}'
+            }), 400
+            
+        # Update trip fields
+        trip.status = new_status
+        trip.actual_distance = data.get('actual_distance')
+        trip.actual_duration = data.get('actual_duration')
+        trip.actual_price = data.get('actual_price')
+        trip.fuel_cost = data.get('fuel_cost')
+        trip.toll_cost = data.get('toll_cost')
+        trip.notes = data.get('notes')
+        trip.ecmr_link = data.get('ecmr_link')
+        trip.gps_tracking_link = data.get('gps_tracking_link')
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Trip updated successfully',
+            'new_status': new_status,
+            'updated_fields': {
+                'actual_distance': trip.actual_distance,
+                'actual_duration': trip.actual_duration,
+                'actual_price': trip.actual_price
             }
-            
-            if new_status not in valid_transitions.get(trip.status, []):
-                flash(f'Invalid status transition from {trip.status} to {new_status}')
-                if isinstance(current_user, User):
-                    return redirect(url_for('user_dashboard'))
-                else:
-                    return redirect(url_for('truck_owner_dashboard'))
-            # Update status and other fields
-            trip.status = new_status
-            trip.actual_distance = float(request.form.get('actual_distance')) if request.form.get('actual_distance') else None
-            trip.actual_duration = float(request.form.get('actual_duration')) if request.form.get('actual_duration') else None
-            trip.actual_price = float(request.form.get('actual_price')) if request.form.get('actual_price') else None
-            trip.notes = request.form.get('notes')
-            trip.ecmr_link = request.form.get('ecmr_link')
-            trip.gps_tracking_link = request.form.get('gps_tracking_link')
-            
-            db.session.commit()
-            flash('Trip details updated successfully!')
-        else:
-            flash('Invalid trip update request')
-    
-    # Redirect based on user type
-    if isinstance(current_user, User):
-        return redirect(url_for('user_dashboard'))
-    elif isinstance(current_user, TruckOwner):
-        return redirect(url_for('truck_owner_dashboard'))
-    else:
-        return redirect(url_for('index'))
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error updating trip: {str(e)}'
+        }), 500
 
 @app.route('/truck-owner/dashboard', methods=['GET', 'POST'])
 @login_required

@@ -289,7 +289,7 @@
       });
     });
 
-    // Handle form submissions with better error handling
+    // Enhanced trip update form submission
     document.querySelectorAll('.trip-update-form').forEach(form => {
       form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -299,53 +299,81 @@
         submitBtn.disabled = true;
         submitBtn.textContent = 'Updating...';
         
+        // Validate required fields
+        const requiredFields = form.querySelectorAll('input[required], select[required], textarea[required]');
+        let isValid = true;
+        requiredFields.forEach(field => {
+          if (!field.value.trim()) {
+            field.classList.add('error');
+            isValid = false;
+          } else {
+            field.classList.remove('error');
+          }
+        });
+
+        if (!isValid) {
+          showFlashMessage('Please fill all required fields', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalBtnText;
+          return;
+        }
+
         try {
+          // Convert form data to JSON
           const formData = new FormData(this);
-          const response = await fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-              'Accept': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
+          const jsonData = {};
+          formData.forEach((value, key) => {
+            // Convert numeric fields to numbers
+            if (['actual_distance', 'actual_duration', 'actual_price', 'fuel_cost', 'toll_cost'].includes(key)) {
+              jsonData[key] = parseFloat(value);
+            } else {
+              jsonData[key] = value;
             }
           });
 
-          // Check content type before parsing
-          const contentType = response.headers.get('content-type');
-          let data;
-          if (contentType && contentType.includes('application/json')) {
-            data = await response.json();
-          } else {
-            // Handle HTML response (likely a redirect)
-            window.location.reload();
-            return;
-          }
+          const response = await fetch(this.action, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(jsonData)
+          });
+
+          const data = await response.json();
           
           if (!response.ok) {
             throw new Error(data.message || 'Server error');
           }
           
-          if (data && data.success) {
-            // Show success feedback
+          if (data.success) {
+            // Update UI elements
             const tripId = form.querySelector('input[name="trip_id"]').value;
             const statusBadge = document.querySelector(`.trip-row[data-trip-id="${tripId}"] .status-badge`);
             
-            // Update status badge if it exists
             if (statusBadge) {
               statusBadge.className = `status-badge status-${data.new_status}`;
               statusBadge.textContent = data.new_status.replace('_', ' ').title();
             }
             
-            // Close details and show success message
-            document.getElementById(`details-${tripId}`).style.display = 'none';
+            // Update other displayed values
+            const tripRow = document.querySelector(`.trip-row[data-trip-id="${tripId}"]`);
+            if (tripRow) {
+              const distanceCell = tripRow.querySelector('td:nth-child(3)');
+              const priceCell = tripRow.querySelector('td:nth-child(4)');
+              if (distanceCell && jsonData.actual_distance) {
+                distanceCell.textContent = `${jsonData.actual_distance.toFixed(2)} km`;
+              }
+              if (priceCell && jsonData.actual_price) {
+                priceCell.textContent = `€${jsonData.actual_price.toFixed(2)}`;
+              }
+            }
+
             showFlashMessage('Trip updated successfully!', 'success');
-            
-            // Refresh data after 1 second
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
+            document.getElementById(`details-${tripId}`).style.display = 'none';
           } else {
-            throw new Error((data && data.message) || 'Update failed');
+            throw new Error(data.message || 'Update failed');
           }
         } catch (error) {
           console.error('Update error:', error);
