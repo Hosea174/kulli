@@ -107,6 +107,10 @@ def create_trip_route():
     try:
         pickup_data = response1.json()
         destination_data = response2.json()
+    except ValueError as e:
+        print(f"JSON parsing error: {str(e)}")
+        flash("Error processing location data. Please try again.")
+        return redirect(url_for('user_dashboard'))
 
         if not pickup_data['features'] or not destination_data['features']:
             print(f"No features found - Pickup: {pickup_data}, Destination: {destination_data}")
@@ -145,6 +149,14 @@ def create_trip_route():
         try:
             response = requests.get(mapbox_url)
             trip_data = response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Mapbox Directions API request failed: {str(e)}")
+            flash("Error connecting to Mapbox. Please try again.")
+            return redirect(url_for('user_dashboard'))
+        except ValueError as e:
+            print(f"JSON parsing error: {str(e)}")
+            flash("Error processing route data. Please try again.")
+            return redirect(url_for('user_dashboard'))
             
             print(f"Mapbox Directions API response: {trip_data}")  # Debug log
 
