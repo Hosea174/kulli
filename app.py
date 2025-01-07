@@ -240,18 +240,38 @@ def create_trip_route():
     try:
         pickup_data = response1.json()
         destination_data = response2.json()
+        
+        # Validate API responses
+        if not pickup_data.get('features') or not destination_data.get('features'):
+            print(f"Mapbox Geocoding API error - Pickup: {pickup_data}, Destination: {destination_data}")
+            flash("Could not find coordinates for the locations. Please try different addresses.")
+            return redirect(url_for('user_dashboard'))
+            
+        pickup_coords = pickup_data['features'][0]['geometry']['coordinates']
+        dest_coords = destination_data['features'][0]['geometry']['coordinates']
+        
+        # Validate coordinates
+        if not isinstance(pickup_coords, list) or len(pickup_coords) != 2 or \
+           not isinstance(dest_coords, list) or len(dest_coords) != 2:
+            print(f"Invalid coordinates format - Pickup: {pickup_coords}, Destination: {dest_coords}")
+            flash("Invalid location coordinates format. Please try different addresses.")
+            return redirect(url_for('user_dashboard'))
+            
+        # Validate coordinate values
+        if not all(isinstance(coord, (int, float)) for coord in pickup_coords) or \
+           not all(isinstance(coord, (int, float)) for coord in dest_coords):
+            print(f"Invalid coordinate values - Pickup: {pickup_coords}, Destination: {dest_coords}")
+            flash("Invalid location coordinate values. Please try different addresses.")
+            return redirect(url_for('user_dashboard'))
+            
     except ValueError as e:
         print(f"JSON parsing error: {str(e)}")
         flash("Error processing location data. Please try again.")
         return redirect(url_for('user_dashboard'))
-
-    if not pickup_data['features'] or not destination_data['features']:
-        print(f"No features found - Pickup: {pickup_data}, Destination: {destination_data}")
-        flash("Could not find coordinates for the locations. Please try different addresses.")
+    except KeyError as e:
+        print(f"Missing required data in API response: {str(e)}")
+        flash("Error processing location data. Please try again.")
         return redirect(url_for('user_dashboard'))
-        
-    pickup_coords = pickup_data['features'][0]['geometry']['coordinates']
-    dest_coords = destination_data['features'][0]['geometry']['coordinates']
     
     pickup_coordinates = {
         'longitude': pickup_coords[0],
@@ -282,6 +302,31 @@ def create_trip_route():
     try:
         response = requests.get(mapbox_url)
         trip_data = response.json()
+        
+        # Validate API response
+        if response.status_code != 200:
+            print(f"Mapbox Directions API error - Status: {response.status_code}, Response: {trip_data}")
+            error_msg = "Could not calculate route. Please check the locations and try again."
+            if trip_data.get('code') == 'InvalidInput' and 'maximum distance' in trip_data.get('message', ''):
+                error_msg = "The distance between locations is too large for our current service. Please try locations closer together."
+            flash(error_msg)
+            return redirect(url_for('user_dashboard'))
+            
+        if not trip_data.get('routes') or len(trip_data['routes']) == 0:
+            print(f"No routes found in response: {trip_data}")
+            error_msg = "No route found between these locations. Please try different addresses."
+            if trip_data.get('code') == 'InvalidInput' and 'maximum distance' in trip_data.get('message', ''):
+                error_msg = "The distance between locations is too large for our current service. Please try locations closer together."
+            flash(error_msg)
+            return redirect(url_for('user_dashboard'))
+            
+        # Validate route data
+        route = trip_data['routes'][0]
+        if not route.get('distance') or not route.get('duration'):
+            print(f"Missing required route data: {route}")
+            flash("Error calculating trip details. Please try again.")
+            return redirect(url_for('user_dashboard'))
+            
     except requests.exceptions.RequestException as e:
         print(f"Mapbox Directions API request failed: {str(e)}")
         flash("Error connecting to Mapbox. Please try again.")
@@ -290,23 +335,9 @@ def create_trip_route():
         print(f"JSON parsing error: {str(e)}")
         flash("Error processing route data. Please try again.")
         return redirect(url_for('user_dashboard'))
-        
-    print(f"Mapbox Directions API response: {trip_data}")  # Debug log
-
-    if response.status_code != 200:
-        print(f"Mapbox Directions API error - Status: {response.status_code}, Response: {trip_data}")
-        error_msg = "Could not calculate route. Please check the locations and try again."
-        if trip_data.get('code') == 'InvalidInput' and 'maximum distance' in trip_data.get('message', ''):
-            error_msg = "The distance between locations is too large for our current service. Please try locations closer together."
-        flash(error_msg)
-        return redirect(url_for('user_dashboard'))
-        
-    if 'routes' not in trip_data or len(trip_data['routes']) == 0:
-        print(f"No routes found in response: {trip_data}")
-        error_msg = "No route found between these locations. Please try different addresses."
-        if trip_data.get('code') == 'InvalidInput' and 'maximum distance' in trip_data.get('message', ''):
-            error_msg = "The distance between locations is too large for our current service. Please try locations closer together."
-        flash(error_msg)
+    except KeyError as e:
+        print(f"Missing required data in API response: {str(e)}")
+        flash("Error processing route data. Please try again.")
         return redirect(url_for('user_dashboard'))
     
     try:
