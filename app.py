@@ -1,4 +1,5 @@
 from flask import Flask, current_app, flash, jsonify, redirect, render_template, request, session, url_for
+from flask_wtf.csrf import CSRFProtect
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user, login_required
 from flask_mail import Mail
@@ -41,6 +42,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
 db.init_app(app)
+csrf = CSRFProtect(app)
 mail.init_app(app)
 login_manager = LoginManager(app)
 migrate = Migrate(app, db)
