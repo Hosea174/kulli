@@ -179,7 +179,6 @@ def truck_owner_dashboard():
             flash('No trip selected')
         return redirect(url_for('truck_owner_dashboard'))
         
-    print("Logged-in user:", current_user.name, current_user.email, current_user.id)
     trips = get_truck_owner_trips(current_user.id)
     return render_template('truck_owner_dashboard.html', 
                          trips=trips,
