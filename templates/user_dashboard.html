@@ -205,58 +205,68 @@
   async function fetchSuggestions(query, inputField) {
     try {
       const url = '/api/autocomplete?query=' + encodeURIComponent(query);
-      const response = await fetch(url); // Asynchronous call to the backend
+      const response = await fetch(url);
       const data = await response.json();
-      console.log(data.features)
+      
       // Clear existing datalist
-      let datalistId = 'suggestions-' + inputField.id;
+      const datalistId = 'suggestions-' + inputField.id;
       let existingDatalist = document.getElementById(datalistId);
       if (existingDatalist) {
         existingDatalist.remove();
       }
 
-      // Create a new datalist and populate it with suggestions
-      const datalist = document.createElement('datalist');
-      datalist.id = datalistId;
+      // Create new datalist if we have suggestions
+      if (data.features && data.features.length > 0) {
+        const datalist = document.createElement('datalist');
+        datalist.id = datalistId;
 
-      if (data.features) {
         data.features.forEach(feature => {
           const option = document.createElement('option');
-          option.value = feature.place_name; // Mapbox returns a "place_name" field
+          option.value = feature.place_name || feature.text || '';
           datalist.appendChild(option);
         });
+
+        document.body.appendChild(datalist);
+        inputField.setAttribute('list', datalistId);
       }
-
-      // Append the datalist to the document
-      document.body.appendChild(datalist);
-
-      // Associate the datalist with the input field
-      inputField.setAttribute('list', datalistId);
     } catch (error) {
       console.error('Error fetching autocomplete suggestions:', error);
     }
   }
 
-  // Add event listeners to the input fields for real-time autocomplete
-  document.addEventListener('DOMContentLoaded', () => {
+  // Initialize autocomplete functionality
+  function initAutocomplete() {
     const pickupInput = document.getElementById('pickup_location');
     const destinationInput = document.getElementById('destination');
 
-    // Listen for the "input" event on both fields
-    pickupInput.addEventListener('input', () => {
-      const query = pickupInput.value;
-      if (query.length > 2) { // Fetch suggestions only for queries longer than 2 characters
-        fetchSuggestions(query, pickupInput);
-      }
-    });
+    if (pickupInput && destinationInput) {
+      // Debounce function to limit API calls
+      const debounce = (func, delay) => {
+        let timeout;
+        return function(...args) {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+      };
 
-    destinationInput.addEventListener('input', () => {
-      const query = destinationInput.value;
-      if (query.length > 2) {
-        fetchSuggestions(query, destinationInput);
-      }
-    });
-  });
+      const handleInput = debounce((input, field) => {
+        if (input.length > 2) {
+          fetchSuggestions(input, field);
+        }
+      }, 300);
+
+      pickupInput.addEventListener('input', (e) => {
+        handleInput(e.target.value, pickupInput);
+      });
+
+      destinationInput.addEventListener('input', (e) => {
+        handleInput(e.target.value, destinationInput);
+      });
+    }
+  }
+
+  // Initialize when DOM is ready
+  document.addEventListener('DOMContentLoaded', initAutocomplete);
 </script>
 
 
