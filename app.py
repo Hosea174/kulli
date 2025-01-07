@@ -173,15 +173,18 @@ def create_trip_route():
 
     if response.status_code != 200:
         print(f"Mapbox Directions API error - Status: {response.status_code}, Response: {trip_data}")
-        flash("Could not calculate route. Please check the locations and try again.")
+        error_msg = "Could not calculate route. Please check the locations and try again."
+        if trip_data.get('code') == 'InvalidInput' and 'maximum distance' in trip_data.get('message', ''):
+            error_msg = "The distance between locations is too large for our current service. Please try locations closer together."
+        flash(error_msg)
         return redirect(url_for('user_dashboard'))
         
     if 'routes' not in trip_data or len(trip_data['routes']) == 0:
         print(f"No routes found in response: {trip_data}")
-        if 'message' in trip_data:
-            flash(f"Mapbox error: {trip_data['message']}")
-        else:
-            flash("No route found between these locations. Please try different addresses.")
+        error_msg = "No route found between these locations. Please try different addresses."
+        if trip_data.get('code') == 'InvalidInput' and 'maximum distance' in trip_data.get('message', ''):
+            error_msg = "The distance between locations is too large for our current service. Please try locations closer together."
+        flash(error_msg)
         return redirect(url_for('user_dashboard'))
     
     try:
