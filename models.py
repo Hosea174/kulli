@@ -39,3 +39,4 @@ class Trip(db.Model):
     actual_distance = db.Column(db.Float, default=None)  # Initially NULL
     actual_price = db.Column(db.Float, default=None)  # Initially NULL
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    additional_data = db.Column(db.JSON, default={})  # For storing extra parameters

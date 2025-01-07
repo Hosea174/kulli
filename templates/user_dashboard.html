@@ -9,14 +9,73 @@
     <a href="/" class="btn-primary">Create a New Trip</a>
   </div>
   <h3>Your Trips</h3>
-  <ul class="trip-list">
-    {% for trip in trips %}
-    <li>
-      <strong>{{ trip.pickup_location }}</strong> to <strong>{{ trip.destination }}</strong>
-      - Status: {{ trip.status }}
-    </li>
-    {% endfor %}
-  </ul>
+  <h3>Your Trips</h3>
+  <table class="trip-table">
+    <thead>
+      <tr>
+        <th>Pickup</th>
+        <th>Destination</th>
+        <th>Distance</th>
+        <th>Price</th>
+        <th>Status</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trip in trips %}
+      <tr>
+        <td>{{ trip.pickup_location }}</td>
+        <td>{{ trip.destination }}</td>
+        <td>{{ "%.2f"|format(trip.est_distance) }} km</td>
+        <td>€{{ "%.2f"|format(trip.est_price) }}</td>
+        <td>
+          <span class="status-badge status-{{ trip.status }}">
+            {{ trip.status|replace('_', ' ')|title }}
+          </span>
+        </td>
+        <td>
+          <button class="btn-secondary" onclick="showTripDetails({{ trip.id }})">
+            View Details
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div id="trip-details-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>Trip Details</h3>
+      <pre id="trip-details-content"></pre>
+    </div>
+  </div>
+
+  <script>
+    // Get the modal
+    const modal = document.getElementById('trip-details-modal');
+    const modalContent = document.getElementById('trip-details-content');
+    const span = document.getElementsByClassName('close')[0];
+
+    function showTripDetails(tripId) {
+      fetch(`/api/trip/${tripId}`)
+        .then(response => response.json())
+        .then(data => {
+          modalContent.textContent = JSON.stringify(data, null, 2);
+          modal.style.display = 'block';
+        });
+    }
+
+    span.onclick = function() {
+      modal.style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    }
+  </script>
 
   <form method="POST" action="{{ url_for('create_trip_route') }}">
     <div class="form-group">

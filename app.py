@@ -71,6 +71,32 @@ def user_dashboard():
     trips = get_user_trips(current_user.id)
     return render_template('user_dashboard.html', trips=trips)
 
+@app.route('/api/trip/<int:trip_id>')
+@login_required
+def get_trip_details(trip_id):
+    trip = Trip.query.get(trip_id)
+    if trip and trip.user_id == current_user.id:
+        trip_data = {
+            'id': trip.id,
+            'pickup_location': trip.pickup_location,
+            'destination': trip.destination,
+            'status': trip.status,
+            'estimated': {
+                'distance': trip.est_distance,
+                'duration': trip.est_duration,
+                'price': trip.est_price
+            },
+            'actual': {
+                'distance': trip.actual_distance,
+                'duration': trip.actual_duration,
+                'price': trip.actual_price
+            },
+            'created_at': trip.created_at.isoformat(),
+            'additional_data': trip.additional_data
+        }
+        return jsonify(trip_data)
+    return jsonify({'error': 'Trip not found'}), 404
+
 @app.route('/update-trip-status', methods=['POST'])
 @login_required
 def update_trip_status():
