@@ -210,7 +210,13 @@ def create_trip_route():
         'est_distance': est_distance,
         'est_duration': est_duration,
         'est_price': est_price,
-        'route_geometry': trip_data['routes'][0]['geometry']  # Add the full route geometry
+        'route_geometry': {
+            'type': 'LineString',
+            'coordinates': [
+                [pickup_coordinates['longitude'], pickup_coordinates['latitude']],
+                [destination_coordinates['longitude'], destination_coordinates['latitude']]
+            ]
+        }
     }
 
     return redirect(url_for('confirm_trip_page'))

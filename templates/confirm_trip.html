@@ -87,14 +87,15 @@
     map.on('load', () => {
       try {
         console.log('Route geometry data:', mapElement.dataset.routeGeometry);
-        const routeGeometry = JSON.parse(mapElement.dataset.routeGeometry);
-        console.log('Parsed route geometry:', routeGeometry);
-        
-        // Ensure the route geometry is valid
-        if (!routeGeometry || !routeGeometry.coordinates || !Array.isArray(routeGeometry.coordinates)) {
-          console.error('Invalid route geometry:', routeGeometry);
-          return;
-        }
+        // Use straight line between points as fallback
+        const routeGeometry = {
+            type: 'LineString',
+            coordinates: [
+                pickupCoordinates,
+                destinationCoordinates
+            ]
+        };
+        console.log('Using straight line geometry:', routeGeometry);
 
         // Add the route source
         map.addSource('route', {
