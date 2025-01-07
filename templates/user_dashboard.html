@@ -42,12 +42,12 @@
         <th>Distance</th>
         <th>Price</th>
         <th>Status</th>
-        <th>Details</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
       {% for trip in trips %}
-      <tr>
+      <tr class="trip-row" data-trip-id="{{ trip.id }}">
         <td>{{ trip.pickup_location }}</td>
         <td>{{ trip.destination }}</td>
         <td>{{ "%.2f"|format(trip.est_distance) }} km</td>
@@ -58,36 +58,78 @@
           </span>
         </td>
         <td>
-          <button class="details-btn" onclick="showTripDetails('{{ trip.id }}')">
-            DETAILS
+          <button class="btn-secondary toggle-details" data-trip-id="{{ trip.id }}">
+            Details
           </button>
-          {% if trip.status == 'waiting' %}
-          {% if trip.status == 'waiting' %}
+        </td>
+      </tr>
+      <tr class="trip-details" id="details-{{ trip.id }}" style="display: none;">
+        <td colspan="7">
           <form method="POST" action="{{ url_for('update_trip_status_route') }}" class="trip-update-form">
             <input type="hidden" name="trip_id" value="{{ trip.id }}">
-            <select name="status" class="status-select" onchange="this.form.submit()">
-              <option value="waiting" selected>Waiting</option>
-              <option value="canceled">Canceled</option>
-            </select>
+            
+            <div class="form-columns">
+              <div class="form-column">
+                <div class="form-group">
+                  <label>Status:</label>
+                  <select name="status" class="status-select">
+                    <option value="{{ trip.status }}" selected>{{ trip.status|replace('_', ' ')|title }}</option>
+                    {% if trip.status == 'waiting' %}
+                      <option value="canceled">Canceled</option>
+                    {% elif trip.status == 'truck_assigned' %}
+                      <option value="in_progress">In Progress</option>
+                      <option value="canceled">Canceled</option>
+                    {% elif trip.status == 'in_progress' %}
+                      <option value="completed">Completed</option>
+                      <option value="canceled">Canceled</option>
+                    {% endif %}
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label>Actual Distance (km):</label>
+                  <input type="number" step="0.01" name="actual_distance" 
+                         value="{{ trip.actual_distance if trip.actual_distance else '' }}">
+                </div>
+                
+                <div class="form-group">
+                  <label>Actual Duration (hours):</label>
+                  <input type="number" step="0.1" name="actual_duration" 
+                         value="{{ trip.actual_duration if trip.actual_duration else '' }}">
+                </div>
+                
+                <div class="form-group">
+                  <label>Actual Price (€):</label>
+                  <input type="number" step="0.01" name="actual_price" 
+                         value="{{ trip.actual_price if trip.actual_price else '' }}">
+                </div>
+              </div>
+              
+              <div class="form-column">
+                <div class="form-group">
+                  <label>Notes:</label>
+                  <textarea name="notes">{{ trip.notes if trip.notes else '' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label>eCMR Link:</label>
+                  <input type="url" name="ecmr_link" 
+                         value="{{ trip.ecmr_link if trip.ecmr_link else '' }}">
+                </div>
+                
+                <div class="form-group">
+                  <label>GPS Tracking Link:</label>
+                  <input type="url" name="gps_tracking_link" 
+                         value="{{ trip.gps_tracking_link if trip.gps_tracking_link else '' }}">
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Update Trip</button>
+              <button type="button" class="btn-secondary close-details" data-trip-id="{{ trip.id }}">Close</button>
+            </div>
           </form>
-          {% elif trip.status != 'waiting' %}
-          <form method="POST" action="{{ url_for('update_trip_status_route') }}" class="trip-update-form">
-            <input type="hidden" name="trip_id" value="{{ trip.id }}">
-            <select name="status" class="status-select" onchange="this.form.submit()">
-              <option value="{{ trip.status }}" selected>{{ trip.status|replace('_', ' ')|title }}</option>
-              <option value="completed">Completed</option>
-            </select>
-          </form>
-          {% endif %}
-          {% elif trip.status != 'waiting' %}
-          <form method="POST" action="{{ url_for('update_trip_status_route') }}" class="trip-update-form">
-            <input type="hidden" name="trip_id" value="{{ trip.id }}">
-            <select name="status" class="status-select" onchange="this.form.submit()">
-              <option value="{{ trip.status }}" selected>{{ trip.status|replace('_', ' ')|title }}</option>
-              <option value="completed">Completed</option>
-            </select>
-          </form>
-          {% endif %}
         </td>
       </tr>
       {% endfor %}
@@ -204,224 +246,66 @@
       });
     });
 
-    rejectBtn?.addEventListener('click', function() {
-      const reason = prompt('Please specify what adjustments are needed:');
-      if (reason) {
-        fetch('/request-price-adjustment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            trip_id: tripId,
-            reason: reason
-          })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            alert('Adjustment request sent to truck owner');
-            this.style.display = 'none';
-          } else {
-            alert('Error sending request: ' + (data.message || 'Unknown error'));
+    // Handle toggle buttons
+    document.querySelectorAll('.toggle-details').forEach(button => {
+      button.addEventListener('click', function() {
+        const tripId = this.dataset.tripId;
+        const detailsRow = document.getElementById(`details-${tripId}`);
+        
+        // Close all other open details
+        document.querySelectorAll('.trip-details').forEach(row => {
+          if (row.id !== `details-${tripId}`) {
+            row.style.display = 'none';
           }
         });
-      }
-    });
-
-    // Handle status updates
-    updateStatusBtn?.addEventListener('click', function() {
-      const newStatus = statusSelect.value;
-      
-      fetch('/update-trip-status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          trip_id: tripId,
-          status: newStatus
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          alert('Status updated successfully');
-          location.reload();
+        
+        // Toggle current details
+        if (detailsRow.style.display === 'none') {
+          detailsRow.style.display = 'table-row';
         } else {
-          alert('Error updating status: ' + (data.message || 'Unknown error'));
+          detailsRow.style.display = 'none';
         }
       });
     });
 
-    // Get modal elements
-    const modal = document.getElementById('trip-details-modal');
-    const span = document.getElementsByClassName('close')[0];
-    
-    // Function to show trip details
-    function showTripDetails(tripId) {
-      console.log('Fetching details for trip:', tripId);
-      
-      // Show loading state
-      modal.style.display = 'block';
-      document.getElementById('trip-details-content').innerHTML = '<p>Loading trip details...</p>';
-      
-      // Fetch trip details from API
-      fetch(`/api/trip/${tripId}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
+    // Handle close buttons
+    document.querySelectorAll('.close-details').forEach(button => {
+      button.addEventListener('click', function() {
+        const tripId = this.dataset.tripId;
+        document.getElementById(`details-${tripId}`).style.display = 'none';
+      });
+    });
+
+    // Handle form submissions
+    document.querySelectorAll('.trip-update-form').forEach(form => {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
           }
-          return response.json();
         })
+        .then(response => response.json())
         .then(data => {
-          // Update modal content with trip data
-          const modalContent = `
-            <h3>Trip Details</h3>
-            <div class="trip-details">
-              <div class="detail-row">
-                <span class="detail-label">Status:</span>
-                <span class="status-badge status-${data.status}">
-                  ${data.status.replace('_', ' ').toUpperCase()}
-                </span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Pickup:</span>
-                <span>${data.pickup_location}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Destination:</span>
-                <span>${data.destination}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Created:</span>
-                <span>${new Date(data.created_at).toLocaleString()}</span>
-              </div>
-              
-              <h4>Estimated Details</h4>
-              <div class="detail-row">
-                <span class="detail-label">Distance:</span>
-                <span>${data.estimated.distance.toFixed(2)} km</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Duration:</span>
-                <span>${(data.estimated.duration / 60).toFixed(1)} hours</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Price:</span>
-                <span>€${data.estimated.price.toFixed(2)}</span>
-              </div>
-              
-              <h4>Actual Details</h4>
-              <div class="detail-row">
-                <span class="detail-label">Distance:</span>
-                <span>${data.actual.distance ? data.actual.distance.toFixed(2) : 'N/A'} km</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Duration:</span>
-                <span>${data.actual.duration ? (data.actual.duration / 60).toFixed(1) : 'N/A'} hours</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Price:</span>
-                <span>€${data.actual.price ? data.actual.price.toFixed(2) : 'N/A'}</span>
-              </div>
-            </div>
-          `;
-          
-          document.getElementById('trip-details-content').innerHTML = modalContent;
-            
-          // Additional fields
-          document.getElementById('trip-notes').textContent = 
-            data.notes ? data.notes : 'N/A';
-            
-          const ecmrLink = document.getElementById('trip-ecmr-link');
-          if (data.ecmr_link) {
-            ecmrLink.textContent = 'View eCMR';
-            ecmrLink.href = data.ecmr_link;
-            ecmrLink.style.display = 'inline';
+          if (data.success) {
+            // Close the details and refresh the table row
+            const tripId = form.querySelector('input[name="trip_id"]').value;
+            document.getElementById(`details-${tripId}`).style.display = 'none';
+            location.reload(); // Refresh to show updated data
           } else {
-            ecmrLink.style.display = 'none';
+            alert('Error updating trip: ' + (data.message || 'Unknown error'));
           }
-          
-          const gpsLink = document.getElementById('trip-gps-link');
-          if (data.gps_tracking_link) {
-            gpsLink.textContent = 'Track GPS';
-            gpsLink.href = data.gps_tracking_link;
-            gpsLink.style.display = 'inline';
-          } else {
-            gpsLink.style.display = 'none';
-          }
-
-          // Show price controls based on status
-          const acceptPriceBtn = document.getElementById('accept-price-btn');
-          const rejectPriceBtn = document.getElementById('reject-price-btn');
-          
-          if (data.status === 'truck_assigned' && data.actual_price) {
-            acceptPriceBtn.style.display = 'inline-block';
-            rejectPriceBtn.style.display = 'inline-block';
-          } else {
-            acceptPriceBtn.style.display = 'none';
-            rejectPriceBtn.style.display = 'none';
-          }
-
-          // Set status select value
-          statusSelect.value = data.status;
-          updateStatusBtn.style.display = data.status !== 'completed' && 
-                                        data.status !== 'canceled' ? 'inline-block' : 'none';
-
-          // Update cargo details
-          document.getElementById('trip-cargo-description').textContent = 
-            data.cargo_description || 'N/A';
-          document.getElementById('trip-cargo-weight').textContent = 
-            data.cargo_weight ? data.cargo_weight.toFixed(2) : 'N/A';
-          document.getElementById('trip-cargo-volume').textContent = 
-            data.cargo_volume ? data.cargo_volume.toFixed(2) : 'N/A';
-          document.getElementById('trip-special-requirements').textContent = 
-            data.special_requirements || 'N/A';
-
-          // Update documents
-          const documentsContainer = document.getElementById('trip-documents');
-          documentsContainer.innerHTML = '';
-          if (data.documents && data.documents.length > 0) {
-            data.documents.forEach(doc => {
-              const docLink = document.createElement('a');
-              docLink.href = doc.url;
-              docLink.textContent = doc.name || 'Document';
-              docLink.target = '_blank';
-              docLink.className = 'document-link';
-              documentsContainer.appendChild(docLink);
-              documentsContainer.appendChild(document.createElement('br'));
-            });
-          } else {
-            documentsContainer.textContent = 'No documents available';
-          }
-            
-          modal.style.display = 'block';
         })
         .catch(error => {
-          console.error('Error fetching trip details:', error);
-          document.getElementById('trip-details-content').innerHTML = `
-            <div class="error-message">
-              <p>Error loading trip details. Please try again.</p>
-              <p>${error.message}</p>
-            </div>
-          `;
+          console.error('Error:', error);
+          alert('Error updating trip');
         });
-    }
-
-    // Close modal handlers
-    span.onclick = () => modal.style.display = 'none';
-    
-    window.onclick = (event) => {
-      if (event.target === modal) {
-        modal.style.display = 'none';
-      }
-    };
-    
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && modal.style.display === 'block') {
-        modal.style.display = 'none';
-      }
+      });
     });
   </script>
 
