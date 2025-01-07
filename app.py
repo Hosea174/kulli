@@ -2,6 +2,7 @@ from flask import Flask, current_app, flash, jsonify, redirect, render_template,
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user, login_required
 from flask_mail import Mail
+from flask_migrate import Migrate
 import os
 from dotenv import load_dotenv
 from flask_login import LoginManager
@@ -42,6 +43,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 mail.init_app(app)
 login_manager = LoginManager(app)
+migrate = Migrate(app, db)
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
