@@ -5,7 +5,7 @@
 {% block content %}
 <div class="dashboard">
   <h2>Welcome, {{ current_user.name }}</h2>
-  <h3>Your Transport Trips</h3>
+  <h3>Your Assigned Trips</h3>
   <table class="trip-table">
     <thead>
       <tr>
@@ -18,7 +18,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for trip in trips %}
+      {% for trip in trips.my_trips %}
       <tr>
         <td>{{ trip.pickup_location }}</td>
         <td>{{ trip.destination }}</td>
@@ -47,6 +47,41 @@
             <button type="submit" class="btn-secondary">Update</button>
           </form>
           {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Available Trips</h3>
+  <table class="trip-table">
+    <thead>
+      <tr>
+        <th>Pickup</th>
+        <th>Destination</th>
+        <th>Distance</th>
+        <th>Price</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trip in trips.available_trips %}
+      <tr>
+        <td>{{ trip.pickup_location }}</td>
+        <td>{{ trip.destination }}</td>
+        <td>{{ "%.2f"|format(trip.est_distance) }} km</td>
+        <td>€{{ "%.2f"|format(trip.est_price) }}</td>
+        <td>
+          <span class="status-badge status-{{ trip.status }}">
+            {{ trip.status|replace('_', ' ')|title }}
+          </span>
+        </td>
+        <td>
+          <form method="POST" action="{{ url_for('truck_owner_dashboard') }}">
+            <input type="hidden" name="trip_id" value="{{ trip.id }}">
+            <button type="submit" class="btn-primary">Accept</button>
+          </form>
         </td>
       </tr>
       {% endfor %}

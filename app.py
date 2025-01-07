@@ -135,7 +135,9 @@ def truck_owner_dashboard():
         
     print("Logged-in user:", current_user.name, current_user.email, current_user.id)
     trips = get_truck_owner_trips(current_user.id)
-    return render_template('truck_owner_dashboard.html', trips=trips)
+    return render_template('truck_owner_dashboard.html', 
+                         trips=trips,
+                         current_user=current_user)
 
 @app.route('/create_trip', methods=['POST'])
 @login_required

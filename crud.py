@@ -37,7 +37,17 @@ def get_user_trips(user_id):
 
 # Fetch trips for truck owners
 def get_truck_owner_trips(truck_owner_id):
-    return Trip.query.filter(
-        (Trip.truck_owner_id == truck_owner_id) | 
-        (Trip.status == 'waiting')
-    ).order_by(Trip.status.desc(), Trip.created_at.desc()).all()
+    # Get trips assigned to this truck owner
+    my_trips = Trip.query.filter(
+        Trip.truck_owner_id == truck_owner_id
+    ).order_by(Trip.created_at.desc()).all()
+    
+    # Get available trips (status = waiting)
+    available_trips = Trip.query.filter(
+        Trip.status == 'waiting'
+    ).order_by(Trip.created_at.desc()).all()
+    
+    return {
+        'my_trips': my_trips,
+        'available_trips': available_trips
+    }
