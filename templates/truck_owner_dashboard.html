@@ -39,7 +39,7 @@
           <form method="POST" action="{{ url_for('update_trip_status') }}">
             <input type="hidden" name="trip_id" value="{{ trip.id }}">
             <select name="status" class="status-select">
-              <option value="truck_assigned" {% if trip.status == 'truck_assigned' %}selected{% endif %}>Assigned</option>
+              <option value="truck_assigned" {% if trip.status == 'truck_assigned' %}selected{% endif %}>Truck Assigned</option>
               <option value="started" {% if trip.status == 'started' %}selected{% endif %}>Started</option>
               <option value="completed" {% if trip.status == 'completed' %}selected{% endif %}>Completed</option>
             </select>

@@ -6,7 +6,8 @@ import os
 from dotenv import load_dotenv
 from flask_login import LoginManager
 import requests
-from crud import create_trip, get_user_trips, get_waiting_trips, update_trip_status
+from crud import create_trip, get_user_trips, get_truck_owner_trips, update_trip_status
+from models import Trip
 from extensions import db, mail
 from models import User, TruckOwner
 
