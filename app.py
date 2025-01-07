@@ -112,93 +112,93 @@ def create_trip_route():
         flash("Error processing location data. Please try again.")
         return redirect(url_for('user_dashboard'))
 
-        if not pickup_data['features'] or not destination_data['features']:
-            print(f"No features found - Pickup: {pickup_data}, Destination: {destination_data}")
-            flash("Could not find coordinates for the locations. Please try different addresses.")
-            return redirect(url_for('user_dashboard'))
-            
-        pickup_coords = pickup_data['features'][0]['geometry']['coordinates']
-        dest_coords = destination_data['features'][0]['geometry']['coordinates']
+    if not pickup_data['features'] or not destination_data['features']:
+        print(f"No features found - Pickup: {pickup_data}, Destination: {destination_data}")
+        flash("Could not find coordinates for the locations. Please try different addresses.")
+        return redirect(url_for('user_dashboard'))
         
-        pickup_coordinates = {
-            'longitude': pickup_coords[0],
-            'latitude': pickup_coords[1]
-        }
-        destination_coordinates = {
-            'longitude': dest_coords[0],
-            'latitude': dest_coords[1]
-        }
-        
-        pickup_location = pickup_data['features'][0].get('properties', {}).get('full_address', 
-            pickup_data['features'][0].get('properties', {}).get('name', 'Unknown location'))
-        destination = destination_data['features'][0].get('properties', {}).get('full_address', 
-            destination_data['features'][0].get('properties', {}).get('name', 'Unknown location'))
-            
-        print(f"Geocoding successful - Pickup: {pickup_location}, Destination: {destination}")
+    pickup_coords = pickup_data['features'][0]['geometry']['coordinates']
+    dest_coords = destination_data['features'][0]['geometry']['coordinates']
     
-        # Check if coordinates are valid
-        if not all(isinstance(coord, (int, float)) for coord in pickup_coordinates.values()) or \
-           not all(isinstance(coord, (int, float)) for coord in destination_coordinates.values()):
-            print(f"Invalid coordinates - Pickup: {pickup_coordinates}, Destination: {destination_coordinates}")
-            flash("Invalid location coordinates. Please try different addresses.")
-            return redirect(url_for('user_dashboard'))
-
-        mapbox_url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{pickup_coordinates['longitude']},{pickup_coordinates['latitude']};{destination_coordinates['longitude']},{destination_coordinates['latitude']}?access_token={mapbox_token}"
-        print(f"Mapbox Directions API URL: {mapbox_url}")
+    pickup_coordinates = {
+        'longitude': pickup_coords[0],
+        'latitude': pickup_coords[1]
+    }
+    destination_coordinates = {
+        'longitude': dest_coords[0],
+        'latitude': dest_coords[1]
+    }
+    
+    pickup_location = pickup_data['features'][0].get('properties', {}).get('full_address', 
+        pickup_data['features'][0].get('properties', {}).get('name', 'Unknown location'))
+    destination = destination_data['features'][0].get('properties', {}).get('full_address', 
+        destination_data['features'][0].get('properties', {}).get('name', 'Unknown location'))
         
-        try:
-            response = requests.get(mapbox_url)
-            trip_data = response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"Mapbox Directions API request failed: {str(e)}")
-            flash("Error connecting to Mapbox. Please try again.")
-            return redirect(url_for('user_dashboard'))
-        except ValueError as e:
-            print(f"JSON parsing error: {str(e)}")
-            flash("Error processing route data. Please try again.")
-            return redirect(url_for('user_dashboard'))
-            
-            print(f"Mapbox Directions API response: {trip_data}")  # Debug log
+    print(f"Geocoding successful - Pickup: {pickup_location}, Destination: {destination}")
 
-            if response.status_code != 200:
-                print(f"Mapbox Directions API error - Status: {response.status_code}, Response: {trip_data}")
-                flash("Could not calculate route. Please check the locations and try again.")
-                return redirect(url_for('user_dashboard'))
-                
-            if 'routes' not in trip_data or len(trip_data['routes']) == 0:
-                print(f"No routes found in response: {trip_data}")
-                if 'message' in trip_data:
-                    flash(f"Mapbox error: {trip_data['message']}")
-                else:
-                    flash("No route found between these locations. Please try different addresses.")
-                return redirect(url_for('user_dashboard'))
-            
-            try:
-                est_distance = round(trip_data['routes'][0]['distance'] / 1000, 2) # in km
-                est_duration = round(trip_data['routes'][0]['duration'] / 60, 2) # in mins
-                est_price = calculate_price(est_distance, truck_type)
-            except KeyError as e:
-                print(f"Error parsing Mapbox response: {str(e)}")
-                flash("Error calculating trip details")
-                return redirect(url_for('user_dashboard'))
-            except Exception as e:
-                print(f"Unexpected error calculating trip details: {str(e)}")
-                flash("Error processing trip details")
-                return redirect(url_for('user_dashboard'))
+    # Check if coordinates are valid
+    if not all(isinstance(coord, (int, float)) for coord in pickup_coordinates.values()) or \
+       not all(isinstance(coord, (int, float)) for coord in destination_coordinates.values()):
+        print(f"Invalid coordinates - Pickup: {pickup_coordinates}, Destination: {destination_coordinates}")
+        flash("Invalid location coordinates. Please try different addresses.")
+        return redirect(url_for('user_dashboard'))
 
-            # store trip details in session to be used in the confirmation page...
-            session['trip_data'] = {
-                'pickup_location': pickup_location,
-                'destination': destination,
-                'pickup_coordinates': [pickup_coordinates['longitude'], pickup_coordinates['latitude']],
-                'destination_coordinates': [destination_coordinates['longitude'] , destination_coordinates['latitude']],
-                'truck_type': truck_type,
-                'est_distance': est_distance,
-                'est_duration': est_duration,
-                'est_price': est_price
-            }
+    mapbox_url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{pickup_coordinates['longitude']},{pickup_coordinates['latitude']};{destination_coordinates['longitude']},{destination_coordinates['latitude']}?access_token={mapbox_token}"
+    print(f"Mapbox Directions API URL: {mapbox_url}")
+    
+    try:
+        response = requests.get(mapbox_url)
+        trip_data = response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Mapbox Directions API request failed: {str(e)}")
+        flash("Error connecting to Mapbox. Please try again.")
+        return redirect(url_for('user_dashboard'))
+    except ValueError as e:
+        print(f"JSON parsing error: {str(e)}")
+        flash("Error processing route data. Please try again.")
+        return redirect(url_for('user_dashboard'))
+        
+    print(f"Mapbox Directions API response: {trip_data}")  # Debug log
 
-            return redirect(url_for('confirm_trip_page'))
+    if response.status_code != 200:
+        print(f"Mapbox Directions API error - Status: {response.status_code}, Response: {trip_data}")
+        flash("Could not calculate route. Please check the locations and try again.")
+        return redirect(url_for('user_dashboard'))
+        
+    if 'routes' not in trip_data or len(trip_data['routes']) == 0:
+        print(f"No routes found in response: {trip_data}")
+        if 'message' in trip_data:
+            flash(f"Mapbox error: {trip_data['message']}")
+        else:
+            flash("No route found between these locations. Please try different addresses.")
+        return redirect(url_for('user_dashboard'))
+    
+    try:
+        est_distance = round(trip_data['routes'][0]['distance'] / 1000, 2) # in km
+        est_duration = round(trip_data['routes'][0]['duration'] / 60, 2) # in mins
+        est_price = calculate_price(est_distance, truck_type)
+    except KeyError as e:
+        print(f"Error parsing Mapbox response: {str(e)}")
+        flash("Error calculating trip details")
+        return redirect(url_for('user_dashboard'))
+    except Exception as e:
+        print(f"Unexpected error calculating trip details: {str(e)}")
+        flash("Error processing trip details")
+        return redirect(url_for('user_dashboard'))
+
+    # store trip details in session to be used in the confirmation page...
+    session['trip_data'] = {
+        'pickup_location': pickup_location,
+        'destination': destination,
+        'pickup_coordinates': [pickup_coordinates['longitude'], pickup_coordinates['latitude']],
+        'destination_coordinates': [destination_coordinates['longitude'] , destination_coordinates['latitude']],
+        'truck_type': truck_type,
+        'est_distance': est_distance,
+        'est_duration': est_duration,
+        'est_price': est_price
+    }
+
+    return redirect(url_for('confirm_trip_page'))
 
 @app.route('/confirm_trip_page')
 @login_required
