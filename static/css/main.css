@@ -160,6 +160,33 @@ body {
   text-decoration: none;
 }
 
+.trip-details {
+  padding: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.trip-details h4 {
+  margin: 1.5rem 0 0.5rem 0;
+  color: var(--primary-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
 pre {
   background: var(--background-color);
   padding: 1rem;
