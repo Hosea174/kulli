@@ -140,7 +140,30 @@
         <div class="detail-row">
           <span class="detail-label">Price:</span>
           €<span id="trip-act-price"></span>
+          <button id="accept-price-btn" class="btn-secondary" style="display:none; margin-left:1rem">Accept Price</button>
         </div>
+        
+        <h4>Cargo Details</h4>
+        <div class="detail-row">
+          <span class="detail-label">Description:</span>
+          <span id="trip-cargo-description"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Weight:</span>
+          <span id="trip-cargo-weight"></span> kg
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Volume:</span>
+          <span id="trip-cargo-volume"></span> m³
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Special Requirements:</span>
+          <span id="trip-special-requirements"></span>
+        </div>
+        
+        <h4>Documents</h4>
+        <div class="document-list" id="trip-documents"></div>
+        
         <h4>Additional Information</h4>
         <div class="detail-row">
           <span class="detail-label">Notes:</span>
@@ -218,6 +241,41 @@
             gpsLink.style.display = 'inline';
           } else {
             gpsLink.style.display = 'none';
+          }
+
+          // Show accept price button if status is truck_assigned
+          const acceptPriceBtn = document.getElementById('accept-price-btn');
+          if (data.status === 'truck_assigned' && data.actual_price) {
+            acceptPriceBtn.style.display = 'inline-block';
+          } else {
+            acceptPriceBtn.style.display = 'none';
+          }
+
+          // Update cargo details
+          document.getElementById('trip-cargo-description').textContent = 
+            data.cargo_description || 'N/A';
+          document.getElementById('trip-cargo-weight').textContent = 
+            data.cargo_weight ? data.cargo_weight.toFixed(2) : 'N/A';
+          document.getElementById('trip-cargo-volume').textContent = 
+            data.cargo_volume ? data.cargo_volume.toFixed(2) : 'N/A';
+          document.getElementById('trip-special-requirements').textContent = 
+            data.special_requirements || 'N/A';
+
+          // Update documents
+          const documentsContainer = document.getElementById('trip-documents');
+          documentsContainer.innerHTML = '';
+          if (data.documents && data.documents.length > 0) {
+            data.documents.forEach(doc => {
+              const docLink = document.createElement('a');
+              docLink.href = doc.url;
+              docLink.textContent = doc.name || 'Document';
+              docLink.target = '_blank';
+              docLink.className = 'document-link';
+              documentsContainer.appendChild(docLink);
+              documentsContainer.appendChild(document.createElement('br'));
+            });
+          } else {
+            documentsContainer.textContent = 'No documents available';
           }
             
           modal.style.display = 'block';
