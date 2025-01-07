@@ -142,43 +142,35 @@ def create_trip_route():
             trip_data = response.json()
             
             print(f"Mapbox Directions API response: {trip_data}")  # Debug log
-        except requests.exceptions.RequestException as e:
-            print(f"Mapbox Directions API request failed: {str(e)}")
-            flash("Could not connect to Mapbox service. Please try again later.")
-            return redirect(url_for('user_dashboard'))
-        except ValueError as e:
-            print(f"Invalid JSON response from Mapbox: {str(e)}")
-            flash("Invalid response from Mapbox service. Please try again.")
-            return redirect(url_for('user_dashboard'))
-        
-        if response.status_code != 200:
-            print(f"Mapbox Directions API error - Status: {response.status_code}, Response: {trip_data}")
-            flash("Could not calculate route. Please check the locations and try again.")
-            return redirect(url_for('user_dashboard'))
-            
-        if 'routes' not in trip_data or len(trip_data['routes']) == 0:
-            print(f"No routes found in response: {trip_data}")
-            if 'message' in trip_data:
-                flash(f"Mapbox error: {trip_data['message']}")
-            else:
-                flash("No route found between these locations. Please try different addresses.")
-            return redirect(url_for('user_dashboard'))
-        
-        try:
-            est_distance = round(trip_data['routes'][0]['distance'] / 1000, 2) # in km
-            est_duration = round(trip_data['routes'][0]['duration'] / 60, 2) # in mins
-            est_price = calculate_price(est_distance, truck_type)
-        except KeyError as e:
-            print(f"Error parsing Mapbox response: {str(e)}")
-            flash("Error calculating trip details")
-            return redirect(url_for('user_dashboard'))
-        except Exception as e:
-            print(f"Unexpected error calculating trip details: {str(e)}")
-            flash("Error processing trip details")
-            return redirect(url_for('user_dashboard'))
 
-    # store trip details in session to be used in the confirmation page...
-    session['trip_data'] = {
+            if response.status_code != 200:
+                print(f"Mapbox Directions API error - Status: {response.status_code}, Response: {trip_data}")
+                flash("Could not calculate route. Please check the locations and try again.")
+                return redirect(url_for('user_dashboard'))
+                
+            if 'routes' not in trip_data or len(trip_data['routes']) == 0:
+                print(f"No routes found in response: {trip_data}")
+                if 'message' in trip_data:
+                    flash(f"Mapbox error: {trip_data['message']}")
+                else:
+                    flash("No route found between these locations. Please try different addresses.")
+                return redirect(url_for('user_dashboard'))
+            
+            try:
+                est_distance = round(trip_data['routes'][0]['distance'] / 1000, 2) # in km
+                est_duration = round(trip_data['routes'][0]['duration'] / 60, 2) # in mins
+                est_price = calculate_price(est_distance, truck_type)
+            except KeyError as e:
+                print(f"Error parsing Mapbox response: {str(e)}")
+                flash("Error calculating trip details")
+                return redirect(url_for('user_dashboard'))
+            except Exception as e:
+                print(f"Unexpected error calculating trip details: {str(e)}")
+                flash("Error processing trip details")
+                return redirect(url_for('user_dashboard'))
+
+            # store trip details in session to be used in the confirmation page...
+            session['trip_data'] = {
         'pickup_location': pickup_location,
         'destination': destination,
         'pickup_coordinates': [pickup_coordinates['longitude'], pickup_coordinates['latitude']],
