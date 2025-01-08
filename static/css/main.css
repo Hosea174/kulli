@@ -112,6 +112,12 @@ a {
   border-radius: 7px;
   outline: none;
   cursor: pointer;
+  transition: all .3s ease-in-out;
+
+  &:hover {
+    background: #39f49a;
+
+  }
 }
 
 .btn-secondary {
@@ -119,9 +125,29 @@ a {
   padding: 10px 14px;
   border-radius: 7px;
   border: 1px solid #080808;
-  background: rgba(195, 225, 211, 0.00);
   outline: none;
   cursor: pointer;
+  transition: all .3s ease-in-out;
+
+  &:hover {
+    background: #5f957b17;
+  }
+}
+
+.btn-tertiary {
+  padding: 10px 14px;
+  border-radius: 7px;
+  border: 1px solid #5DFFB2;
+  background: rgba(93, 255, 178, 0.10);
+  outline: none;
+  color: #fff;
+  cursor: pointer;
+  transition: all .3s ease-in-out;
+
+  &:hover {
+    background: rgba(93, 255, 178, 0.20);
+
+  }
 }
 
 /* main styles */
@@ -134,8 +160,8 @@ a {
   padding: 12px 13px;
   border-radius: 8px;
   background: rgba(239, 255, 247, 0.64);
-  box-shadow: 0px 4px 64px 0px rgba(194, 204, 210, 0.40);
   backdrop-filter: blur(16.5px);
+  box-shadow: 0px 4px 64px 0px rgba(194, 204, 210, 0.40);
   font-size: 16px;
 
   .navbar-menu {
@@ -150,7 +176,7 @@ a {
 
     .navbar-btns {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
 
       .register-dropdown {
@@ -171,11 +197,13 @@ a {
           background: transparent;
           overflow: hidden;
           box-shadow: 0px 4px 34px 0px rgba(194, 204, 210, 0.20);
+
           a.dropdown-item {
             padding: 12px 8px;
             display: block;
             width: 100%;
-            background: #fff;
+            background: rgba(239, 255, 247, 0.84);
+            backdrop-filter: blur(35px);
             transition: background .2s ease-in-out;
 
             &:hover {

@@ -2,15 +2,75 @@
 
 {% block title %}Home{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="landing-page">
-  <header>
-    <h1>Welcome to Kulli</h1>
-    <p>Connecting users with truck owners for hassle-free load transportation.</p>
-  </header>
+  <div class="wrapper hero-text">
+    <h1>Effortless <span class="highlight">Trucking</span> Anytime, Anywhere!</h1>
+    <p>We'll connect you with the nearest available truck owner for an efficient and cost-effective match.</p>
+  </div>
   <div class="cta-buttons">
-    <a href="{{ url_for('auth.register_user') }}" class="btn-primary">Register as User</a>
-    <a href="{{ url_for('auth.register_truck_owner') }}" class="btn-secondary">Register as Truck Owner</a>
+    <a href="{{ url_for('auth.register_user') }}" class="btn-primary">Find a Truck</a>
+    <a href="{{ url_for('auth.register_truck_owner') }}" class="btn-tertiary">Provide Trucking</a>
+  </div>
+
+  <div class="step-cards">
+    <div class="card">
+      <div class="card-header">
+        <div class="step-title">
+          <img src="{{ url_for('static', filename='images/icons/post-icon.svg') }}" alt="Post Trip Icon">
+          <h2>Post Your Load</h2>
+        </div>
+        <p class="step-no">01</p>
+      </div>
+      <p class="step-description">Enter your pickup and destination details, and choose the truck size you need.</p>
+      <a href="" class="signup-link">
+        <p>Get Started</p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none">
+          <path stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M1.358 1.358h8.716m0 0v8.716m0-8.716-8.716 8.716" />
+        </svg>
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-title">
+          <img src="{{ url_for('static', filename='images/icons/match-icon.svg') }}" alt="Match Trip Icon">
+          <h2>Get Instant Match</h2>
+        </div>
+        <p class="step-no">02</p>
+      </div>
+      <p class="step-description">We'll connect you with the nearest available truck owner in seconds.</p>
+      <a href="" class="signup-link">
+        <p>Get Started</p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none">
+          <path stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M1.358 1.358h8.716m0 0v8.716m0-8.716-8.716 8.716" />
+        </svg>
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-title">
+          <img src="{{ url_for('static', filename='images/icons/track-icon.svg') }}" alt="Track Trip Icon">
+          <h2>Track & Complete</h2>
+        </div>
+        <p class="step-no">03</p>
+      </div>
+      <p class="step-description">Follow your load in real time and complete your delivery with ease.</p>
+      <a href="" class="signup-link">
+        <p>Get Started</p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none">
+          <path stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M1.358 1.358h8.716m0 0v8.716m0-8.716-8.716 8.716" />
+        </svg>
+      </a>
+    </div>
   </div>
 </div>
 {% endblock %}
