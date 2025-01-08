@@ -19,6 +19,7 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(BASE_DIR, "instance/truck_delivery.db")}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAPBOX_TOKEN'] = os.getenv('MAPBOX_TOKEN')
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 # Initialize extensions
 db.init_app(app)
 mail.init_app(app)
