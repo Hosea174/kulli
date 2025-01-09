@@ -97,209 +97,200 @@
       <div class="trip-tables">
         <!-- Active Trips Table -->
         <table class="trip-table active">
-        <thead>
-          <tr>
-            <th>Pickup</th>
-            <th>Destination</th>
-            <th>Distance</th>
-            <th>Max Price</th>
-            <th>Bids</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for trip in trips.active_requests %}
-          <tr class="trip-row" data-trip-id="{{ trip.id }}">
-            <td>{{ trip.pickup_location }}</td>
-            <td>{{ trip.destination }}</td>
-            <td>{{ "%.2f"|format(trip.est_distance) }} km</td>
-            <td>€{{ "%.2f"|format(trip.est_price) }}</td>
-            <td>{{ trip.bid_count }}</td>
-            <td>
-              <span class="status-badge status-{{ trip.status }}">
-                {{ trip.status|replace('_', ' ')|title }}
-              </span>
-            </td>
-            <td>
-              <button class="btn-secondary toggle-details" data-trip-id="{{ trip.id }}">
-                View Bids
-              </button>
-            </td>
-          </tr>
-          <tr class="trip-details" id="details-{{ trip.id }}" style="display: none;">
-            <td colspan="7">
-              <div class="bid-list">
-                {% if trip.bids %}
-                  <h4>Received Bids</h4>
-                  <table class="bid-table">
-                    <thead>
-                      <tr>
-                        <th>Truck Owner</th>
-                        <th>Price</th>
-                        <th>Details</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for bid in trip.bids %}
-                      <tr>
-                        <td>{{ bid.truck_owner.name }}</td>
-                        <td>€{{ "%.2f"|format(bid.price) }}</td>
-                        <td>
-                          <button class="btn-secondary view-bid-details" data-bid-id="{{ bid.id }}">
-                            View Details
-                          </button>
-                        </td>
-                        <td>
-                          <form method="POST" action="{{ url_for('accept_bid') }}">
-                            <input type="hidden" name="bid_id" value="{{ bid.id }}">
-                            <input type="hidden" name="trip_id" value="{{ trip.id }}">
-                            <button type="submit" class="btn-primary">Accept Bid</button>
-                          </form>
-                        </td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                {% else %}
-                  <p>No bids received yet</p>
-                {% endif %}
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          <thead>
+            <tr>
+              <th>Pickup</th>
+              <th>Destination</th>
+              <th>Distance</th>
+              <th>Max Price</th>
+              <th>Bids</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for trip in trips.active_requests %}
+            <tr class="trip-row" data-trip-id="{{ trip.id }}">
+              <td>{{ trip.pickup_location }}</td>
+              <td>{{ trip.destination }}</td>
+              <td>{{ "%.2f"|format(trip.est_distance) }} km</td>
+              <td>€{{ "%.2f"|format(trip.est_price) }}</td>
+              <td>{{ trip.bid_count }}</td>
+              <td>
+                <span class="status-badge status-{{ trip.status }}">
+                  {{ trip.status|replace('_', ' ')|title }}
+                </span>
+              </td>
+              <td>
+                <button class="btn-secondary toggle-details" data-trip-id="{{ trip.id }}">
+                  View Bids
+                </button>
+              </td>
+            </tr>
+            <tr class="trip-details" id="details-{{ trip.id }}" style="display: none;">
+              <td colspan="7">
+                <div class="bid-list">
+                  {% if trip.bids %}
+                    <h4>Received Bids</h4>
+                    <table class="bid-table">
+                      <thead>
+                        <tr>
+                          <th>Truck Owner</th>
+                          <th>Price</th>
+                          <th>Details</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for bid in trip.bids %}
+                        <tr>
+                          <td>{{ bid.truck_owner.name }}</td>
+                          <td>€{{ "%.2f"|format(bid.price) }}</td>
+                          <td>
+                            <button class="btn-secondary view-bid-details" data-bid-id="{{ bid.id }}">
+                              View Details
+                            </button>
+                          </td>
+                          <td>
+                            <form method="POST" action="{{ url_for('accept_bid') }}">
+                              <input type="hidden" name="bid_id" value="{{ bid.id }}">
+                              <input type="hidden" name="trip_id" value="{{ trip.id }}">
+                              <button type="submit" class="btn-primary">Accept Bid</button>
+                            </form>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  {% else %}
+                    <p>No bids received yet</p>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </section>
   </div>
 </div>
 
 {% block scripts %}
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('tripForm');
     const estimateBtn = document.getElementById('estimateBtn');
     const submitBtn = document.getElementById('submitBtn');
     const estimateResults = document.getElementById('estimateResults');
     
     estimateBtn.addEventListener('click', async function() {
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData.entries());
-      
-      try {
-        const response = await fetch('/api/estimate_route', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-          },
-          body: JSON.stringify({
-            pickup_location: data.pickup_location,
-            destination: data.destination
-          })
-        });
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
         
-        const result = await response.json();
-        
-        if (response.ok) {
-          // Update form with estimates
-          form.querySelector('input[name="est_distance"]').value = result.distance.toFixed(2);
-          form.querySelector('input[name="est_duration"]').value = result.duration.toFixed(2);
-          
-          // Show price estimates
-          document.querySelectorAll('.truck-btn').forEach(btn => {
-            const type = btn.dataset.truckType;
-            btn.querySelector('.price').textContent = `€${result.price_estimates[type].toFixed(2)}`;
-          });
-          
-          estimateResults.style.display = 'block';
-          submitBtn.disabled = false;
-        } else {
-          throw new Error(result.error || 'Failed to get estimates');
+        try {
+            const response = await fetch('/api/estimate_route', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                },
+                body: JSON.stringify({
+                    pickup_location: data.pickup_location,
+                    destination: data.destination
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                form.querySelector('input[name="est_distance"]').value = result.distance.toFixed(2);
+                form.querySelector('input[name="est_duration"]').value = result.duration.toFixed(2);
+                
+                document.querySelectorAll('.truck-btn').forEach(btn => {
+                    const type = btn.dataset.truckType;
+                    btn.querySelector('.price').textContent = `€${result.price_estimates[type].toFixed(2)}`;
+                });
+                
+                estimateResults.style.display = 'block';
+                submitBtn.disabled = false;
+            } else {
+                throw new Error(result.error || 'Failed to get estimates');
+            }
+        } catch (error) {
+            alert(error.message);
         }
-      } catch (error) {
-        alert(error.message);
-      }
     });
     
-    // Handle truck type selection
     document.querySelectorAll('.truck-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('.truck-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        form.querySelector('input[name="est_price"]').value = 
-          parseFloat(this.querySelector('.price').textContent.replace('€', ''));
-      });
-    });
-
-    // Handle form submission
-    form.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      // Get the selected truck type
-      const selectedTruck = document.querySelector('.truck-btn.active');
-      const truckType = selectedTruck ? selectedTruck.dataset.truckType : null;
-      
-      // Get form data
-      const formData = {
-        pickup_location: form.querySelector('#pickup_location').value,
-        destination: form.querySelector('#destination').value,
-        est_distance: parseFloat(form.querySelector('#est_distance').value),
-        est_duration: parseFloat(form.querySelector('input[name="est_duration"]').value),
-        price: parseFloat(form.querySelector('input[name="est_price"]').value),
-        truck_type: truckType,
-        cargo_description: form.querySelector('#cargo_description').value,
-        cargo_weight: parseFloat(form.querySelector('#cargo_weight').value),
-        cargo_volume: parseFloat(form.querySelector('#cargo_volume').value),
-        special_requirements: form.querySelector('#special_requirements').value,
-        user_id: {{ current_user.id }}
-      };
-      
-      try {
-        const response = await fetch('/create_trip', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-          },
-          body: JSON.stringify(formData)
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.truck-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            form.querySelector('input[name="est_price"]').value = 
+                parseFloat(this.querySelector('.price').textContent.replace('€', ''));
         });
+    });
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        const result = await response.json();
+        const selectedTruck = document.querySelector('.truck-btn.active');
+        const truckType = selectedTruck ? selectedTruck.dataset.truckType : null;
         
-        if (response.ok) {
-          window.location.href = '/user/dashboard';
-        } else {
-          throw new Error(result.error || 'Failed to create trip');
+        const formData = {
+            pickup_location: form.querySelector('#pickup_location').value,
+            destination: form.querySelector('#destination').value,
+            est_distance: parseFloat(form.querySelector('#est_distance').value),
+            est_duration: parseFloat(form.querySelector('input[name="est_duration"]').value),
+            est_price: parseFloat(form.querySelector('input[name="est_price"]').value),
+            truck_type: truckType,
+            cargo_description: form.querySelector('#cargo_description').value,
+            cargo_weight: parseFloat(form.querySelector('#cargo_weight').value),
+            cargo_volume: parseFloat(form.querySelector('#cargo_volume').value),
+            special_requirements: form.querySelector('#special_requirements').value,
+            user_id: {{ current_user.id }}
+        };
+        
+        try {
+            const response = await fetch('/create_trip', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                window.location.href = '/user/dashboard';
+            } else {
+                throw new Error(result.error || 'Failed to create trip');
+            }
+        } catch (error) {
+            alert(error.message);
         }
-      } catch (error) {
-        alert(error.message);
-      }
     });
-  });
+});
 
-  // Handle toggle buttons for bid details
-  document.addEventListener('click', function(e) {
+document.addEventListener('click', function(e) {
     if (e.target && e.target.classList.contains('toggle-details')) {
-      const tripId = e.target.dataset.tripId;
-      const detailsRow = document.getElementById(`details-${tripId}`);
-      
-      if (!detailsRow) return;
-      
-      // Toggle current details
-      detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+        const tripId = e.target.dataset.tripId;
+        const detailsRow = document.getElementById(`details-${tripId}`);
+        
+        if (detailsRow) {
+            detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+        }
     }
-  });
+});
 
-  // Handle bid detail view buttons
-  document.querySelectorAll('.view-bid-details').forEach(button => {
+document.querySelectorAll('.view-bid-details').forEach(button => {
     button.addEventListener('click', function() {
-      const bidId = this.dataset.bidId;
-      // Implement bid detail viewing logic here
-      alert('Bid details for bid ID: ' + bidId);
+        const bidId = this.dataset.bidId;
+        alert('Bid details for bid ID: ' + bidId);
     });
-  });
+});
 </script>
 {% endblock %}
 {% endblock %}
