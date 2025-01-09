@@ -117,17 +117,56 @@ def get_trip_details(trip_id):
         return jsonify(trip_data)
     return jsonify({'error': 'Trip not found'}), 404
 
+@app.route('/api/estimate_route', methods=['POST'])
+@login_required 
+def estimate_route():
+    data = request.get_json()
+    pickup = data['pickup_location']
+    destination = data['destination']
+    
+    # Get route from Mapbox
+    url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{pickup};{destination}"
+    params = {
+        'access_token': app.config['MAPBOX_TOKEN'],
+        'geometries': 'geojson',
+        'steps': 'true'
+    }
+    
+    response = requests.get(url, params=params)
+    if response.status_code != 200:
+        return jsonify({'error': 'Failed to get route data'}), 400
+        
+    route_data = response.json()
+    
+    # Calculate estimates
+    distance = route_data['routes'][0]['distance'] / 1000  # Convert to km
+    duration = route_data['routes'][0]['duration'] / 3600  # Convert to hours
+    
+    # Calculate price estimates for different truck types
+    price_estimates = {
+        'small_pickup': calculate_price(distance, 'small_pickup'),
+        'mid_sized': calculate_price(distance, 'mid_sized'),
+        'large': calculate_price(distance, 'large')
+    }
+    
+    return jsonify({
+        'distance': distance,
+        'duration': duration,
+        'price_estimates': price_estimates,
+        'route_geometry': route_data['routes'][0]['geometry']
+    })
+
 @app.route('/create_trip', methods=['POST'])
 @login_required
 def create_trip_route():
-    data = request.form
+    data = request.get_json()
     trip_data = {
         'user_id': current_user.id,
         'pickup_location': data['pickup_location'],
         'destination': data['destination'],
-        'est_duration': float(data['est_duration']),
-        'est_distance': float(data['est_distance']),
-        'est_price': float(data['est_price']),
+        'est_duration': data['duration'],
+        'est_distance': data['distance'],
+        'est_price': data['price'],
         'cargo_description': data.get('cargo_description'),
         'cargo_weight': float(data.get('cargo_weight', 0)),
         'cargo_volume': float(data.get('cargo_volume', 0)),
@@ -136,7 +175,10 @@ def create_trip_route():
     }
     
     trip = create_trip(**trip_data)
-    return redirect(url_for('user_dashboard'))
+    return jsonify({
+        'success': True,
+        'trip': trip.to_dict()
+    })
 
 @app.route('/truck-owner/dashboard', methods=['GET', 'POST'])
 @login_required

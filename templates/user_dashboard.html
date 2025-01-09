@@ -10,7 +10,7 @@
     <!-- Trip Request Form -->
     <section class="trip-request">
       <h3>Create New Trip Request</h3>
-      <form method="POST" action="{{ url_for('create_trip_route') }}" class="trip-form">
+      <form id="tripForm" class="trip-form">
         <div class="form-columns">
           <div class="form-column">
             <div class="form-group">
@@ -58,7 +58,23 @@
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn-primary">Submit Trip Request</button>
+          <button type="button" id="estimateBtn" class="btn-secondary">Get Estimate</button>
+          <button type="submit" id="submitBtn" class="btn-primary" disabled>Submit Trip Request</button>
+        </div>
+        
+        <div id="estimateResults" style="display: none;">
+          <h4>Route Estimates</h4>
+          <div class="truck-type-buttons">
+            <button type="button" class="truck-btn" data-truck-type="small_pickup">
+              Small Pickup: <span class="price"></span>
+            </button>
+            <button type="button" class="truck-btn" data-truck-type="mid_sized">
+              Mid-Sized: <span class="price"></span>
+            </button>
+            <button type="button" class="truck-btn" data-truck-type="large">
+              Large: <span class="price"></span>
+            </button>
+          </div>
         </div>
       </form>
     </section>
@@ -155,6 +171,92 @@
 
 {% block scripts %}
 <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('tripForm');
+    const estimateBtn = document.getElementById('estimateBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const estimateResults = document.getElementById('estimateResults');
+    
+    estimateBtn.addEventListener('click', async function() {
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      
+      try {
+        const response = await fetch('/api/estimate_route', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+          },
+          body: JSON.stringify({
+            pickup_location: data.pickup_location,
+            destination: data.destination
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          // Update form with estimates
+          form.querySelector('input[name="est_distance"]').value = result.distance.toFixed(2);
+          form.querySelector('input[name="est_duration"]').value = result.duration.toFixed(2);
+          
+          // Show price estimates
+          document.querySelectorAll('.truck-btn').forEach(btn => {
+            const type = btn.dataset.truckType;
+            btn.querySelector('.price').textContent = `€${result.price_estimates[type].toFixed(2)}`;
+          });
+          
+          estimateResults.style.display = 'block';
+          submitBtn.disabled = false;
+        } else {
+          throw new Error(result.error || 'Failed to get estimates');
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+    
+    // Handle truck type selection
+    document.querySelectorAll('.truck-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.truck-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        form.querySelector('input[name="est_price"]').value = 
+          parseFloat(this.querySelector('.price').textContent.replace('€', ''));
+      });
+    });
+
+    // Handle form submission
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      
+      try {
+        const response = await fetch('/create_trip', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+          },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          window.location.href = '/user/dashboard';
+        } else {
+          throw new Error(result.error || 'Failed to create trip');
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+  });
+
   // Handle toggle buttons for bid details
   document.addEventListener('click', function(e) {
     if (e.target && e.target.classList.contains('toggle-details')) {
