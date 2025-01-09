@@ -63,10 +63,18 @@
       </form>
     </section>
 
-    <!-- Active Trip Requests -->
-    <section class="active-requests">
-      <h3>Your Active Trip Requests</h3>
-      <table class="trip-table">
+    <!-- Trip Status Sections -->
+    <section class="trip-status-section">
+      <h3>Active Trips</h3>
+      <div class="status-tabs">
+        <button class="status-tab active" data-status="active">Active</button>
+        <button class="status-tab" data-status="completed">Completed</button>
+        <button class="status-tab" data-status="canceled">Canceled</button>
+      </div>
+    
+      <div class="trip-tables">
+        <!-- Active Trips Table -->
+        <table class="trip-table active">
         <thead>
           <tr>
             <th>Pickup</th>
@@ -169,4 +177,5 @@
     });
   });
 </script>
+{% endblock %}
 {% endblock %}

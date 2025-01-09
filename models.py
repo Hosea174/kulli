@@ -31,7 +31,9 @@ class Trip(db.Model):
     truck_owner_id = db.Column(db.Integer, db.ForeignKey('truck_owner.id'))
     pickup_location = db.Column(db.String(200), nullable=False)
     destination = db.Column(db.String(200), nullable=False)
-    status = db.Column(db.String(20), default='waiting')
+    status = db.Column(db.String(20), default='waiting')  # waiting, truck_assigned, in_progress, completed, canceled
+    status_history = db.Column(db.JSON, default=[])  # Track status changes
+    last_status_change = db.Column(db.DateTime)
     est_duration = db.Column(db.Float)
     est_distance = db.Column(db.Float)
     est_price = db.Column(db.Float)

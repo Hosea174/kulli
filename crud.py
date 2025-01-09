@@ -37,15 +37,27 @@ def create_trip(user_id, pickup_location, destination, est_duration, est_distanc
 
 def update_trip_status(trip_id, status, **kwargs):
     """
-    Update trip status and any additional fields
+    Update trip status with history tracking
     """
     trip = Trip.query.get(trip_id)
     if trip:
+        # Update status history
+        if not trip.status_history:
+            trip.status_history = []
+        trip.status_history.append({
+            'status': status,
+            'timestamp': datetime.utcnow().isoformat(),
+            'changed_by': kwargs.get('changed_by', 'system')
+        })
+        
         trip.status = status
+        trip.last_status_change = datetime.utcnow()
+        
         # Update any additional fields
         for key, value in kwargs.items():
             if hasattr(trip, key):
                 setattr(trip, key, value)
+                
         db.session.commit()
     return trip
 

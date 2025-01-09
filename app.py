@@ -63,7 +63,23 @@ def index():
 @app.route('/user/dashboard')
 @login_required
 def user_dashboard():
-    trips = get_user_trips(current_user.id)
+    # Get trips in different status categories
+    trips = {
+        'active_requests': Trip.query.filter(
+            (Trip.user_id == current_user.id) &
+            (Trip.status.in_(['waiting', 'truck_assigned', 'in_progress']))
+        ).order_by(Trip.created_at.desc()).all(),
+        
+        'completed_trips': Trip.query.filter(
+            (Trip.user_id == current_user.id) &
+            (Trip.status == 'completed')
+        ).order_by(Trip.created_at.desc()).all(),
+        
+        'canceled_trips': Trip.query.filter(
+            (Trip.user_id == current_user.id) &
+            (Trip.status == 'canceled')
+        ).order_by(Trip.created_at.desc()).all()
+    }
     return render_template('user_dashboard.html', trips=trips)
 
 @app.route('/api/trip/<int:trip_id>')
