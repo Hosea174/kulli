@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 from flask_login import LoginManager
 import requests
-from crud import create_trip, get_user_trips, get_truck_owner_trips, update_trip_status_in_db
+from crud import create_trip, get_user_trips, get_truck_owner_trips, update_trip_status
 from models import Trip
 from extensions import db, mail
 from models import User, TruckOwner
@@ -15,21 +15,14 @@ from models import User, TruckOwner
 # Load environment variables
 load_dotenv()
 
-
 def calculate_price(distance, truck_type):
-    """Calculate trip price in EURO based on distance and truck type.
-    Uses per km rates: 1.32€/km (large), 1.2€/km (medium), 0.95€/km (small)"""
-    # Per km rates in EURO
+    """Calculate trip price in EURO based on distance and truck type."""
     rates = {
         'small_pickup': 0.95,
         'mid_sized': 1.2,
         'large': 1.32
     }
-    
-    # Calculate total price in EURO
     price = distance * rates[truck_type]
-    
-    # Round to 2 decimal places
     return round(price, 2)
 
 # Initialize Flask app
@@ -94,322 +87,112 @@ def get_trip_details(trip_id):
                 'price': trip.actual_price
             },
             'created_at': trip.created_at.isoformat(),
-            'additional_data': trip.additional_data
+            'cargo': {
+                'description': trip.cargo_description,
+                'weight': trip.cargo_weight,
+                'volume': trip.cargo_volume,
+                'requirements': trip.special_requirements
+            },
+            'documents': trip.documents,
+            'ecmr_link': trip.ecmr_link,
+            'gps_tracking_link': trip.gps_tracking_link,
+            'notes': trip.notes
         }
         return jsonify(trip_data)
     return jsonify({'error': 'Trip not found'}), 404
 
-@app.route('/update-trip-status', methods=['POST'])
+@app.route('/create_trip', methods=['POST'])
 @login_required
-def update_trip_status_route():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({'success': False, 'message': 'No data provided'}), 400
-            
-        trip_id = data.get('trip_id')
-        new_status = data.get('status')
-        
-        if not trip_id or not new_status:
-            return jsonify({'success': False, 'message': 'Missing required fields'}), 400
-            
-        trip = Trip.query.get(trip_id)
-        if not trip:
-            return jsonify({'success': False, 'message': 'Trip not found'}), 404
-            
-        # Allow updates from either the user or truck owner
-        is_user = trip.user_id == current_user.id
-        is_truck_owner = trip.truck_owner_id == current_user.id
-        
-        if not (is_user or is_truck_owner):
-            return jsonify({
-                'success': False, 
-                'message': 'You are not authorized to update this trip'
-            }), 403
-            
-        # Additional validation based on user role
-        if is_truck_owner and trip.status == 'waiting':
-            return jsonify({
-                'success': False,
-                'message': 'Truck owners cannot update waiting trips'
-            }), 403
-            
-        # Validate status transitions
-        valid_transitions = {
-            'waiting': ['waiting', 'truck_assigned', 'canceled'],
-            'truck_assigned': ['truck_assigned', 'in_progress', 'canceled'],
-            'in_progress': ['in_progress', 'completed', 'canceled'],
-            'completed': ['completed'],
-            'canceled': ['canceled']
-        }
-        
-        if new_status not in valid_transitions.get(trip.status, []):
-            return jsonify({
-                'success': False,
-                'message': f'Invalid status transition from {trip.status} to {new_status}'
-            }), 400
-            
-        # Update trip fields
-        trip.status = new_status
-        trip.actual_distance = data.get('actual_distance')
-        trip.actual_duration = data.get('actual_duration')
-        trip.actual_price = data.get('actual_price')
-        trip.fuel_cost = data.get('fuel_cost')
-        trip.toll_cost = data.get('toll_cost')
-        trip.notes = data.get('notes')
-        trip.ecmr_link = data.get('ecmr_link')
-        trip.gps_tracking_link = data.get('gps_tracking_link')
-        
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Trip updated successfully',
-            'new_status': new_status,
-            'updated_fields': {
-                'actual_distance': trip.actual_distance,
-                'actual_duration': trip.actual_duration,
-                'actual_price': trip.actual_price
-            }
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': f'Error updating trip: {str(e)}'
-        }), 500
+def create_trip_route():
+    data = request.form
+    trip_data = {
+        'user_id': current_user.id,
+        'pickup_location': data['pickup_location'],
+        'destination': data['destination'],
+        'est_duration': float(data['est_duration']),
+        'est_distance': float(data['est_distance']),
+        'est_price': float(data['est_price']),
+        'cargo_description': data.get('cargo_description'),
+        'cargo_weight': float(data.get('cargo_weight', 0)),
+        'cargo_volume': float(data.get('cargo_volume', 0)),
+        'special_requirements': data.get('special_requirements'),
+        'documents': data.get('documents')
+    }
+    
+    trip = create_trip(**trip_data)
+    return redirect(url_for('user_dashboard'))
 
 @app.route('/truck-owner/dashboard', methods=['GET', 'POST'])
 @login_required
 def truck_owner_dashboard():
+    if not isinstance(current_user, TruckOwner):
+        flash('Access denied. Truck owner account required.', 'error')
+        return redirect(url_for('index'))
+
     if request.method == 'POST':
         trip_id = request.form.get('trip_id')
         truck_owner_id = request.form.get('truck_owner_id')
+        
         if trip_id and truck_owner_id:
-            trip = update_trip_status_in_db(trip_id, 'truck_assigned', truck_owner_id)
+            trip = Trip.query.get(trip_id)
             if trip:
-                flash('Trip accepted successfully!')
+                trip.truck_owner_id = int(truck_owner_id)
+                trip.status = 'truck_assigned'
+                db.session.commit()
+                flash('Trip successfully assigned!', 'success')
             else:
-                flash('Could not find trip')
-        else:
-            flash('No trip selected')
-        return redirect(url_for('truck_owner_dashboard'))
-        
-    trips = get_truck_owner_trips(current_user.id)
+                flash('Trip not found.', 'error')
+
+    # Get trips in two categories
+    my_trips = Trip.query.filter_by(truck_owner_id=current_user.id).all()
+    available_trips = Trip.query.filter_by(status='waiting').all()
+
     return render_template('truck_owner_dashboard.html', 
-                         trips=trips,
-                         current_user=current_user)
+                         trips={'my_trips': my_trips, 'available_trips': available_trips})
 
-@app.route('/create_trip', methods=['POST'])
+@app.route('/update_trip_status', methods=['POST'])
 @login_required
-def create_trip_route():
-    pickup_location = request.form['pickup_location']
-    destination = request.form['destination']
-    truck_type = request.form['truck_type']
-
-    mapbox_token = 'sk.eyJ1IjoiY2hyaXN0ZWRsYSIsImEiOiJjbTVoc2pxcTUwbjM4MmtzZ25nZDllN2k1In0._pobdd2JUaLTehWOMZQG7w'
-
-    batch_request = {
-        "requests": [
-            {
-                "q": pickup_location,
-                "proximity": "ip"
-            },
-            {
-                "q": destination,
-                "proximity": "ip"
-            }
-        ]
-    }
-
-    # Use Mapbox API to estimate distance and duration
-    url1 = f"https://api.mapbox.com/search/geocode/v6/forward?q={pickup_location}&proximity=ip&access_token={mapbox_token}"
-    url2 = f"https://api.mapbox.com/search/geocode/v6/forward?q={destination}&proximity=ip&access_token={mapbox_token}"
-    
-    response1 = requests.get(url1)
-    response2 = requests.get(url2)
-
-    if response1.status_code != 200 or response2.status_code != 200:
-        print(f"Geocoding API error - Pickup status: {response1.status_code}, Destination status: {response2.status_code}")
-        flash("Could not find the locations. Please check the addresses and try again.")
-        return redirect(url_for('user_dashboard'))
-
+def update_trip_status_route():
     try:
-        pickup_data = response1.json()
-        destination_data = response2.json()
+        data = request.get_json()
+        trip_id = data.get('trip_id')
+        status = data.get('status')
         
-        # Validate API responses
-        if not pickup_data.get('features') or not destination_data.get('features'):
-            print(f"Mapbox Geocoding API error - Pickup: {pickup_data}, Destination: {destination_data}")
-            flash("Could not find coordinates for the locations. Please try different addresses.")
-            return redirect(url_for('user_dashboard'))
-            
-        pickup_coords = pickup_data['features'][0]['geometry']['coordinates']
-        dest_coords = destination_data['features'][0]['geometry']['coordinates']
-        
-        # Validate coordinates
-        if not isinstance(pickup_coords, list) or len(pickup_coords) != 2 or \
-           not isinstance(dest_coords, list) or len(dest_coords) != 2:
-            print(f"Invalid coordinates format - Pickup: {pickup_coords}, Destination: {dest_coords}")
-            flash("Invalid location coordinates format. Please try different addresses.")
-            return redirect(url_for('user_dashboard'))
-            
-        # Validate coordinate values
-        if not all(isinstance(coord, (int, float)) for coord in pickup_coords) or \
-           not all(isinstance(coord, (int, float)) for coord in dest_coords):
-            print(f"Invalid coordinate values - Pickup: {pickup_coords}, Destination: {dest_coords}")
-            flash("Invalid location coordinate values. Please try different addresses.")
-            return redirect(url_for('user_dashboard'))
-            
-    except ValueError as e:
-        print(f"JSON parsing error: {str(e)}")
-        flash("Error processing location data. Please try again.")
-        return redirect(url_for('user_dashboard'))
-    except KeyError as e:
-        print(f"Missing required data in API response: {str(e)}")
-        flash("Error processing location data. Please try again.")
-        return redirect(url_for('user_dashboard'))
-    
-    pickup_coordinates = {
-        'longitude': pickup_coords[0],
-        'latitude': pickup_coords[1]
-    }
-    destination_coordinates = {
-        'longitude': dest_coords[0],
-        'latitude': dest_coords[1]
-    }
-    
-    pickup_location = pickup_data['features'][0].get('properties', {}).get('full_address', 
-        pickup_data['features'][0].get('properties', {}).get('name', 'Unknown location'))
-    destination = destination_data['features'][0].get('properties', {}).get('full_address', 
-        destination_data['features'][0].get('properties', {}).get('name', 'Unknown location'))
-        
-    print(f"Geocoding successful - Pickup: {pickup_location}, Destination: {destination}")
+        if not trip_id or not status:
+            return jsonify({'success': False, 'message': 'Missing required fields'}), 400
 
-    # Check if coordinates are valid
-    if not all(isinstance(coord, (int, float)) for coord in pickup_coordinates.values()) or \
-       not all(isinstance(coord, (int, float)) for coord in destination_coordinates.values()):
-        print(f"Invalid coordinates - Pickup: {pickup_coordinates}, Destination: {destination_coordinates}")
-        flash("Invalid location coordinates. Please try different addresses.")
-        return redirect(url_for('user_dashboard'))
+        trip = Trip.query.get(trip_id)
+        if not trip:
+            return jsonify({'success': False, 'message': 'Trip not found'}), 404
 
-    mapbox_url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{pickup_coordinates['longitude']},{pickup_coordinates['latitude']};{destination_coordinates['longitude']},{destination_coordinates['latitude']}?access_token={mapbox_token}"
-    print(f"Mapbox Directions API URL: {mapbox_url}")
-    
-    try:
-        response = requests.get(mapbox_url)
-        trip_data = response.json()
-        
-        # Validate API response
-        if response.status_code != 200:
-            print(f"Mapbox Directions API error - Status: {response.status_code}, Response: {trip_data}")
-            error_msg = "Could not calculate route. Please check the locations and try again."
-            if trip_data.get('code') == 'InvalidInput' and 'maximum distance' in trip_data.get('message', ''):
-                error_msg = "The distance between locations is too large for our current service. Please try locations closer together."
-            flash(error_msg)
-            return redirect(url_for('user_dashboard'))
-            
-        if not trip_data.get('routes') or len(trip_data['routes']) == 0:
-            print(f"No routes found in response: {trip_data}")
-            error_msg = "No route found between these locations. Please try different addresses."
-            if trip_data.get('code') == 'InvalidInput' and 'maximum distance' in trip_data.get('message', ''):
-                error_msg = "The distance between locations is too large for our current service. Please try locations closer together."
-            flash(error_msg)
-            return redirect(url_for('user_dashboard'))
-            
-        # Validate route data
-        route = trip_data['routes'][0]
-        if not route.get('distance') or not route.get('duration'):
-            print(f"Missing required route data: {route}")
-            flash("Error calculating trip details. Please try again.")
-            return redirect(url_for('user_dashboard'))
-            
-    except requests.exceptions.RequestException as e:
-        print(f"Mapbox Directions API request failed: {str(e)}")
-        flash("Error connecting to Mapbox. Please try again.")
-        return redirect(url_for('user_dashboard'))
-    except ValueError as e:
-        print(f"JSON parsing error: {str(e)}")
-        flash("Error processing route data. Please try again.")
-        return redirect(url_for('user_dashboard'))
-    except KeyError as e:
-        print(f"Missing required data in API response: {str(e)}")
-        flash("Error processing route data. Please try again.")
-        return redirect(url_for('user_dashboard'))
-    
-    try:
-        est_distance = round(trip_data['routes'][0]['distance'] / 1000, 2) # in km
-        est_duration = round(trip_data['routes'][0]['duration'] / 60, 2) # in mins
-        est_price = calculate_price(est_distance, truck_type)
-    except KeyError as e:
-        print(f"Error parsing Mapbox response: {str(e)}")
-        flash("Error calculating trip details")
-        return redirect(url_for('user_dashboard'))
-    except Exception as e:
-        print(f"Unexpected error calculating trip details: {str(e)}")
-        flash("Error processing trip details")
-        return redirect(url_for('user_dashboard'))
+        # Verify user has permission to update this trip
+        if trip.user_id != current_user.id and not current_user.__class__.__name__ == 'TruckOwner':
+            return jsonify({'success': False, 'message': 'Unauthorized to update this trip'}), 403
 
-    # store trip details in session to be used in the confirmation page...
-    session['trip_data'] = {
-        'pickup_location': pickup_location,
-        'destination': destination,
-        'pickup_coordinates': [pickup_coordinates['longitude'], pickup_coordinates['latitude']],
-        'destination_coordinates': [destination_coordinates['longitude'] , destination_coordinates['latitude']],
-        'truck_type': truck_type,
-        'est_distance': est_distance,
-        'est_duration': est_duration,
-        'est_price': est_price,
-        'route_geometry': {
-            'type': 'LineString',
-            'coordinates': [
-                [pickup_coordinates['longitude'], pickup_coordinates['latitude']],
-                [destination_coordinates['longitude'], destination_coordinates['latitude']]
-            ]
+        # Update trip status and additional fields
+        update_data = {
+            'status': status,
+            'actual_distance': data.get('actual_distance'),
+            'actual_duration': data.get('actual_duration'),
+            'actual_price': data.get('actual_price'),
+            'fuel_cost': data.get('fuel_cost'),
+            'toll_cost': data.get('toll_cost'),
+            'notes': data.get('notes'),
+            'ecmr_link': data.get('ecmr_link'),
+            'gps_tracking_link': data.get('gps_tracking_link')
         }
-    }
 
-    return redirect(url_for('confirm_trip_page'))
+        trip = update_trip_status(trip_id, status, **update_data)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Trip updated successfully',
+            'trip': trip.to_dict()
+        })
 
-@app.route('/confirm_trip_page')
-@login_required
-def confirm_trip_page():
-    trip_data = session.get('trip_data', {})
-    return render_template('confirm_trip.html', trip_data=trip_data)
-
-@app.route('/confirm_trip', methods=['POST'])
-@login_required
-def confirm_trip():
-    trip_data = request.form
-    create_trip(
-        user_id=current_user.id,
-        pickup_location=trip_data['pickup_location'],
-        destination=trip_data['destination'],
-        est_duration=float(trip_data['est_duration']),
-        est_distance=float(trip_data['est_distance']),
-        est_price=float(trip_data['est_price']),
-    )
-    return redirect(url_for('user_dashboard'))
-
-@app.route('/api/autocomplete', methods=['GET'])
-@login_required
-def autocomplete():
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-    mapbox_token = 'sk.eyJ1IjoiY2hyaXN0ZWRsYSIsImEiOiJjbTVoMDltbzMwZjI4MmhzZDd0aGZpc241In0.Oticj4dmkI08J8zt5AKRqg'
-    
-    bbox = "-17.625, -34.833, 51.208, 37.349"
-    mapbox_url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json?access_token={mapbox_token}&bbox={bbox}"
-    
-    try:
-        response = requests.get(mapbox_url)
-        response.raise_for_status()
-        return jsonify(response.json())
-    except requests.exceptions.RequestException as e:
-        current_app.logger.error(f"Mapbox API error: {str(e)}")
-        return jsonify({"error": "Failed to fetch suggestions"}), 500
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Failed to update trip: {str(e)}'}), 500
 
 if __name__ == '__main__':
     with app.app_context():

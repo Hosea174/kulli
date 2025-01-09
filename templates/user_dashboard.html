@@ -4,494 +4,169 @@
 
 {% block content %}
 <div class="dashboard">
-  <div class="dashboard-controls">
-      <div class="compact-trip-form">
-    <form method="POST" action="{{ url_for('create_trip_route') }}" id="trip-form">
-      <div class="form-row">
-        <input type="text" id="pickup_location" name="pickup_location" required 
-               placeholder="Pickup address" autocomplete="street-address">
-        <input type="text" id="destination" name="destination" required 
-               placeholder="Destination address" autocomplete="street-address">
-      </div>
-      
-      <div class="form-row">
-        <input type="text" name="notes" placeholder="Additional notes (optional)">
-        <input type="text" name="ecmr_link" placeholder="eCMR link (optional)">
-      </div>
-      
-      <div class="truck-type-buttons">
-        <button type="button" class="truck-btn" data-type="small_pickup">Small</button>
-        <button type="button" class="truck-btn" data-type="mid_sized">Medium</button>
-        <button type="button" class="truck-btn" data-type="large">Large</button>
-        <input type="hidden" name="truck_type" id="truck_type" required>
-      </div>
-      
-      <div class="form-actions">
-        <button type="submit" class="btn-primary">Create Trip</button>
-        <a href="#" class="btn-secondary gps-link">Track GPS</a>
-      </div>
-    </form>
-  </div>
+  <h2>Welcome, {{ current_user.name }}</h2>
+  
+  <div class="dashboard-sections">
+    <!-- Trip Request Form -->
+    <section class="trip-request">
+      <h3>Create New Trip Request</h3>
+      <form method="POST" action="{{ url_for('create_trip_request') }}" class="trip-form">
+        <div class="form-columns">
+          <div class="form-column">
+            <div class="form-group">
+              <label for="pickup_location">Pickup Location:</label>
+              <input type="text" id="pickup_location" name="pickup_location" required>
+            </div>
 
-  <h3>Your Trips</h3>
-  <table class="trip-table">
-    <thead>
-      <tr>
-        <th>Pickup</th>
-        <th>Destination</th>
-        <th>Distance</th>
-        <th>Price</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for trip in trips %}
-      <tr class="trip-row" data-trip-id="{{ trip.id }}">
-        <td>{{ trip.pickup_location }}</td>
-        <td>{{ trip.destination }}</td>
-        <td>{{ "%.2f"|format(trip.est_distance) }} km</td>
-        <td>€{{ "%.2f"|format(trip.est_price or 0) }}</td>
-        <td>
-          <span class="status-badge status-{{ trip.status }}">
-            {{ trip.status|replace('_', ' ')|title }}
-          </span>
-          {% if trip.truck_owner %}
-          <div class="truck-owner-info">
-            Assigned to: {{ trip.truck_owner.name }} ({{ trip.truck_owner.phone }})
+            <div class="form-group">
+              <label for="destination">Destination:</label>
+              <input type="text" id="destination" name="destination" required>
+            </div>
+
+            <div class="form-group">
+              <label for="est_distance">Estimated Distance (km):</label>
+              <input type="number" step="0.1" id="est_distance" name="est_distance" required>
+            </div>
+
+            <div class="form-group">
+              <label for="est_price">Maximum Price (€):</label>
+              <input type="number" step="0.01" id="est_price" name="est_price" required>
+            </div>
           </div>
-          {% endif %}
-        </td>
-        <td>
-          <button class="btn-secondary toggle-details" data-trip-id="{{ trip.id }}">
-            Details
-          </button>
-        </td>
-      </tr>
-      <tr class="trip-details" id="details-{{ trip.id }}" style="display: none;">
-        <td colspan="7">
-          <form method="POST" action="{{ url_for('update_trip_status_route') }}" class="trip-update-form">
-            <input type="hidden" name="trip_id" value="{{ trip.id }}">
-            <input type="hidden" name="user_id" value="{{ current_user.id }}">
-            
-            <div class="form-columns">
-              <div class="form-column">
-                <div class="form-group">
-                  <label>Status:</label>
-                  <select name="status" class="status-select">
-                    <option value="{{ trip.status }}" selected>{{ trip.status|replace('_', ' ')|title }}</option>
-                    {% if trip.status == 'waiting' %}
-                      <option value="canceled">Canceled</option>
-                    {% elif trip.status == 'truck_assigned' %}
-                      <option value="in_progress">In Progress</option>
-                      <option value="canceled">Canceled</option>
-                    {% elif trip.status == 'in_progress' %}
-                      <option value="completed">Completed</option>
-                      <option value="canceled">Canceled</option>
-                    {% endif %}
-                  </select>
-                </div>
-                
-                <div class="form-group">
-                  <label>Actual Distance (km):</label>
-                  <input type="number" step="0.01" name="actual_distance" 
-                         value="{{ trip.actual_distance if trip.actual_distance else '' }}">
-                </div>
-                
-                <div class="form-group">
-                  <label>Actual Duration (hours):</label>
-                  <input type="number" step="0.1" name="actual_duration" 
-                         value="{{ trip.actual_duration if trip.actual_duration else '' }}">
-                </div>
-                
-                <div class="form-group">
-                  <label>Actual Price (€):</label>
-                  <input type="number" step="0.01" name="actual_price" 
-                         value="{{ trip.actual_price if trip.actual_price else '' }}" required>
-                </div>
-                
-                <div class="form-group">
-                  <label>Fuel Cost (€):</label>
-                  <input type="number" step="0.01" name="fuel_cost" 
-                         value="{{ trip.fuel_cost if trip.fuel_cost else '' }}" required>
-                </div>
-                
-                <div class="form-group">
-                  <label>Toll Cost (€):</label>
-                  <input type="number" step="0.01" name="toll_cost" 
-                         value="{{ trip.toll_cost if trip.toll_cost else '' }}" required>
-                </div>
-              </div>
-              
-              <div class="form-column">
-                <div class="form-group">
-                  <label>Notes:</label>
-                  <textarea name="notes">{{ trip.notes if trip.notes else '' }}</textarea>
-                </div>
-                
-                <div class="form-group">
-                  <label>eCMR Link:</label>
-                  <input type="url" name="ecmr_link" 
-                         value="{{ trip.ecmr_link if trip.ecmr_link else '' }}">
-                </div>
-                
-                <div class="form-group">
-                  <label>GPS Tracking Link:</label>
-                  <input type="url" name="gps_tracking_link" 
-                         value="{{ trip.gps_tracking_link if trip.gps_tracking_link else '' }}">
-                </div>
-              </div>
-            </div>
-            
-            <div class="form-actions">
-              <button type="submit" class="btn-primary update-trip-btn" data-trip-id="{{ trip.id }}">Update Trip</button>
-              <button type="button" class="btn-secondary close-details" data-trip-id="{{ trip.id }}">Close</button>
-            </div>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 
-  <div id="trip-details-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h3>Trip Details</h3>
-      <div class="trip-details">
-        <div class="detail-row">
-          <span class="detail-label">Status:</span>
-          <span class="status-badge" id="trip-status"></span>
+          <div class="form-column">
+            <div class="form-group">
+              <label for="cargo_description">Cargo Description:</label>
+              <textarea id="cargo_description" name="cargo_description" required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="cargo_weight">Cargo Weight (kg):</label>
+              <input type="number" step="0.1" id="cargo_weight" name="cargo_weight" required>
+            </div>
+
+            <div class="form-group">
+              <label for="cargo_volume">Cargo Volume (m³):</label>
+              <input type="number" step="0.1" id="cargo_volume" name="cargo_volume" required>
+            </div>
+
+            <div class="form-group">
+              <label for="special_requirements">Special Requirements:</label>
+              <textarea id="special_requirements" name="special_requirements"></textarea>
+            </div>
+          </div>
         </div>
-        <div class="detail-row">
-          <span class="detail-label">Pickup:</span>
-          <span id="trip-pickup"></span>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Submit Trip Request</button>
         </div>
-        <div class="detail-row">
-          <span class="detail-label">Destination:</span>
-          <span id="trip-destination"></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Created:</span>
-          <span id="trip-created"></span>
-        </div>
-        <h4>Estimated Details</h4>
-        <div class="detail-row">
-          <span class="detail-label">Distance:</span>
-          <span id="trip-est-distance"></span> km
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Duration:</span>
-          <span id="trip-est-duration"></span> hours
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Price:</span>
-          €<span id="trip-est-price"></span>
-        </div>
-        <h4>Actual Details</h4>
-        <div class="detail-row">
-          <span class="detail-label">Distance:</span>
-          <span id="trip-act-distance"></span> km
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Duration:</span>
-          <span id="trip-act-duration"></span> hours
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Price:</span>
-          €<span id="trip-act-price"></span>
-          <button id="accept-price-btn" class="btn-secondary" style="display:none; margin-left:1rem">Accept Price</button>
-          <button id="reject-price-btn" class="btn-secondary" style="display:none; margin-left:1rem">Request Adjustment</button>
-        </div>
-        
-        <div class="status-controls" style="margin-top: 1rem;">
-          <h4>Trip Status</h4>
-          <select id="trip-status-select" class="status-select">
-            <option value="waiting">Waiting</option>
-            <option value="truck_assigned">Truck Assigned</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="canceled">Canceled</option>
-          </select>
-          <button id="update-status-btn" class="btn-secondary" style="margin-left:1rem">Update Status</button>
-        </div>
-        
-        <h4>Cargo Details</h4>
-        <div class="detail-row">
-          <span class="detail-label">Description:</span>
-          <span id="trip-cargo-description"></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Weight:</span>
-          <span id="trip-cargo-weight"></span> kg
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Volume:</span>
-          <span id="trip-cargo-volume"></span> m³
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Special Requirements:</span>
-          <span id="trip-special-requirements"></span>
-        </div>
-        
-        <h4>Documents</h4>
-        <div class="document-list" id="trip-documents"></div>
-        
-        <h4>Additional Information</h4>
-        <div class="detail-row">
-          <span class="detail-label">Notes:</span>
-          <span id="trip-notes"></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">eCMR Link:</span>
-          <a id="trip-ecmr-link" target="_blank"></a>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">GPS Tracking:</span>
-          <a id="trip-gps-link" target="_blank"></a>
-        </div>
-      </div>
-    </div>
+      </form>
+    </section>
+
+    <!-- Active Trip Requests -->
+    <section class="active-requests">
+      <h3>Your Active Trip Requests</h3>
+      <table class="trip-table">
+        <thead>
+          <tr>
+            <th>Pickup</th>
+            <th>Destination</th>
+            <th>Distance</th>
+            <th>Max Price</th>
+            <th>Bids</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for trip in trips.active_requests %}
+          <tr class="trip-row" data-trip-id="{{ trip.id }}">
+            <td>{{ trip.pickup_location }}</td>
+            <td>{{ trip.destination }}</td>
+            <td>{{ "%.2f"|format(trip.est_distance) }} km</td>
+            <td>€{{ "%.2f"|format(trip.est_price) }}</td>
+            <td>{{ trip.bid_count }}</td>
+            <td>
+              <span class="status-badge status-{{ trip.status }}">
+                {{ trip.status|replace('_', ' ')|title }}
+              </span>
+            </td>
+            <td>
+              <button class="btn-secondary toggle-details" data-trip-id="{{ trip.id }}">
+                View Bids
+              </button>
+            </td>
+          </tr>
+          <tr class="trip-details" id="details-{{ trip.id }}" style="display: none;">
+            <td colspan="7">
+              <div class="bid-list">
+                {% if trip.bids %}
+                  <h4>Received Bids</h4>
+                  <table class="bid-table">
+                    <thead>
+                      <tr>
+                        <th>Truck Owner</th>
+                        <th>Price</th>
+                        <th>Details</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for bid in trip.bids %}
+                      <tr>
+                        <td>{{ bid.truck_owner.name }}</td>
+                        <td>€{{ "%.2f"|format(bid.price) }}</td>
+                        <td>
+                          <button class="btn-secondary view-bid-details" data-bid-id="{{ bid.id }}">
+                            View Details
+                          </button>
+                        </td>
+                        <td>
+                          <form method="POST" action="{{ url_for('accept_bid') }}">
+                            <input type="hidden" name="bid_id" value="{{ bid.id }}">
+                            <input type="hidden" name="trip_id" value="{{ trip.id }}">
+                            <button type="submit" class="btn-primary">Accept Bid</button>
+                          </form>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                {% else %}
+                  <p>No bids received yet</p>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
   </div>
-
-  <script>
-    // Handle truck type selection
-    document.querySelectorAll('.truck-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.truck-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('truck_type').value = btn.dataset.type;
-      });
-    });
-
-    // Handle toggle buttons with proper event delegation
-    document.addEventListener('click', function(e) {
-      if (e.target && e.target.classList.contains('toggle-details')) {
-        const tripId = e.target.dataset.tripId;
-        const detailsRow = document.getElementById(`details-${tripId}`);
-        
-        if (!detailsRow) {
-          console.error('Details row not found for trip:', tripId);
-          return;
-        }
-        
-        // Close all other open details
-        document.querySelectorAll('.trip-details').forEach(row => {
-          if (row.id !== `details-${tripId}`) {
-            row.style.display = 'none';
-          }
-        });
-        
-        // Toggle current details
-        if (detailsRow.style.display === 'none' || !detailsRow.style.display) {
-          detailsRow.style.display = 'table-row';
-        } else {
-          detailsRow.style.display = 'none';
-        }
-      }
-    });
-
-    // Handle close buttons
-    document.querySelectorAll('.close-details').forEach(button => {
-      button.addEventListener('click', function() {
-        const tripId = this.dataset.tripId;
-        document.getElementById(`details-${tripId}`).style.display = 'none';
-      });
-    });
-
-    // Enhanced trip update form submission
-    document.querySelectorAll('.trip-update-form').forEach(form => {
-      form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalBtnText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Updating...';
-        
-        // Validate required fields
-        const requiredFields = form.querySelectorAll('input[required], select[required], textarea[required]');
-        let isValid = true;
-        requiredFields.forEach(field => {
-          if (!field.value.trim()) {
-            field.classList.add('error');
-            isValid = false;
-          } else {
-            field.classList.remove('error');
-          }
-        });
-
-        if (!isValid) {
-          showFlashMessage('Please fill all required fields', 'error');
-          submitBtn.disabled = false;
-          submitBtn.textContent = originalBtnText;
-          return;
-        }
-
-        try {
-          // Convert form data to JSON
-          const formData = new FormData(this);
-          const jsonData = {};
-          formData.forEach((value, key) => {
-            // Convert numeric fields to numbers
-            if (['actual_distance', 'actual_duration', 'actual_price', 'fuel_cost', 'toll_cost'].includes(key)) {
-              jsonData[key] = parseFloat(value);
-            } else {
-              jsonData[key] = value;
-            }
-          });
-
-          const response = await fetch(this.action, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest',
-              'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-            },
-            body: JSON.stringify({
-              ...jsonData,
-              user_id: {{ current_user.id }},
-              is_truck_owner: {% if current_user.__class__.__name__ == 'TruckOwner' %}true{% else %}false{% endif %}
-            })
-          });
-
-          const data = await response.json();
-          
-          if (!response.ok) {
-            throw new Error(data.message || 'Server error');
-          }
-          
-          if (data.success) {
-            // Update UI elements
-            const tripId = form.querySelector('input[name="trip_id"]').value;
-            const statusBadge = document.querySelector(`.trip-row[data-trip-id="${tripId}"] .status-badge`);
-            
-            if (statusBadge) {
-              if (data.new_status) {
-                statusBadge.className = `status-badge status-${data.new_status}`;
-                statusBadge.textContent = data.new_status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-              }
-            }
-            
-            // Update other displayed values
-            const tripRow = document.querySelector(`.trip-row[data-trip-id="${tripId}"]`);
-            if (tripRow) {
-              const distanceCell = tripRow.querySelector('td:nth-child(3)');
-              const priceCell = tripRow.querySelector('td:nth-child(4)');
-              if (distanceCell && jsonData.actual_distance) {
-                distanceCell.textContent = `${jsonData.actual_distance.toFixed(2)} km`;
-              }
-              if (priceCell && jsonData.actual_price) {
-                priceCell.textContent = `€${jsonData.actual_price.toFixed(2)}`;
-              }
-            }
-
-            showFlashMessage('Trip updated successfully!', 'success');
-            document.getElementById(`details-${tripId}`).style.display = 'none';
-          } else {
-            throw new Error(data.message || 'Update failed');
-          }
-        } catch (error) {
-          console.error('Update error:', error);
-          showFlashMessage(`Error: ${error.message}`, 'error');
-        } finally {
-          submitBtn.disabled = false;
-          submitBtn.textContent = originalBtnText;
-        }
-      });
-    });
-
-    // Helper function to show flash messages
-    function showFlashMessage(message, type = 'info') {
-      const flashDiv = document.createElement('div');
-      flashDiv.className = `flash-message flash-${type}`;
-      flashDiv.textContent = message;
-      
-      // Add to flash container
-      const flashContainer = document.querySelector('.flash-messages') || createFlashContainer();
-      flashContainer.appendChild(flashDiv);
-      
-      // Auto-remove after 5 seconds
-      setTimeout(() => {
-        flashDiv.remove();
-      }, 5000);
-    }
-
-    // Create flash container if it doesn't exist
-    function createFlashContainer() {
-      const container = document.createElement('div');
-      container.className = 'flash-messages';
-      document.body.appendChild(container);
-      return container;
-    }
-  </script>
-
-
 </div>
 
+{% block scripts %}
 <script>
-  // Function to fetch suggestions from the backend
-  async function fetchSuggestions(query, inputField) {
-    try {
-      const url = `/api/autocomplete?query=${encodeURIComponent(query)}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      console.log(data.features);
+  // Handle toggle buttons for bid details
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.classList.contains('toggle-details')) {
+      const tripId = e.target.dataset.tripId;
+      const detailsRow = document.getElementById(`details-${tripId}`);
       
-      // Clear existing datalist
-      let datalistId = 'suggestions-' + inputField.id;
-      let existingDatalist = document.getElementById(datalistId);
-      if (existingDatalist) {
-        existingDatalist.remove();
-      }
-
-      // Create a new datalist and populate it with suggestions
-      const datalist = document.createElement('datalist');
-      datalist.id = datalistId;
-
-      if (data.features) {
-        data.features.forEach(feature => {
-          const option = document.createElement('option');
-          option.value = feature.place_name;
-          datalist.appendChild(option);
-        });
-      }
-
-      // Append the datalist to the document
-      document.body.appendChild(datalist);
-
-      // Associate the datalist with the input field
-      inputField.setAttribute('list', datalistId);
-    } catch (error) {
-      console.error('Error fetching autocomplete suggestions:', error);
-    }
-  }
-
-  // Add event listeners to the input fields for real-time autocomplete
-  document.addEventListener('DOMContentLoaded', () => {
-    const pickupInput = document.getElementById('pickup_location');
-    const destinationInput = document.getElementById('destination');
-
-    if (pickupInput) {
-      pickupInput.addEventListener('input', () => {
-        const query = pickupInput.value;
-        if (query.length > 2) {
-          fetchSuggestions(query, pickupInput);
-        }
-      });
-    }
-
-    if (destinationInput) {
-      destinationInput.addEventListener('input', () => {
-        const query = destinationInput.value;
-        if (query.length > 2) {
-          fetchSuggestions(query, destinationInput);
-        }
-      });
+      if (!detailsRow) return;
+      
+      // Toggle current details
+      detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
     }
   });
+
+  // Handle bid detail view buttons
+  document.querySelectorAll('.view-bid-details').forEach(button => {
+    button.addEventListener('click', function() {
+      const bidId = this.dataset.bidId;
+      // Implement bid detail viewing logic here
+      alert('Bid details for bid ID: ' + bidId);
+    });
+  });
 </script>
-
-
 {% endblock %}
