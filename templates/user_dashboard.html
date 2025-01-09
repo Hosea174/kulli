@@ -274,20 +274,25 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
+        // Get form values safely
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
         const selectedTruck = document.querySelector('.truck-btn.active');
         const truckType = selectedTruck ? selectedTruck.dataset.truckType : null;
 
-        const formData = {
-            pickup_location: form.querySelector('#pickup_location').value,
-            destination: form.querySelector('#destination').value,
-            distance: distanceInput ? parseFloat(distanceInput.value) : null,
-            duration: durationInput ? parseFloat(durationInput.value) : null,
-            est_price: parseFloat(form.querySelector('input[name="est_price"]').value),
+        // Prepare trip data
+        const tripData = {
+            pickup_location: data.pickup_location,
+            destination: data.destination,
+            est_duration: parseFloat(data.est_duration) || 0,
+            est_distance: parseFloat(data.est_distance) || 0,
+            est_price: parseFloat(data.est_price) || 0,
             truck_type: truckType,
-            cargo_description: form.querySelector('#cargo_description').value,
-            cargo_weight: parseFloat(form.querySelector('#cargo_weight').value),
-            cargo_volume: parseFloat(form.querySelector('#cargo_volume').value),
-            special_requirements: form.querySelector('#special_requirements').value,
+            cargo_description: data.cargo_description,
+            cargo_weight: parseFloat(data.cargo_weight) || 0,
+            cargo_volume: parseFloat(data.cargo_volume) || 0,
+            special_requirements: data.special_requirements,
             user_id: parseInt("{{ current_user.id }}")
         };
 
@@ -298,7 +303,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(tripData)
             });
 
             const result = await response.json();
