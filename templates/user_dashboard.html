@@ -244,12 +244,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
 
             if (response.ok) {
-                distanceInput.value = result.distance.toFixed(2);
-                durationInput.value = result.duration.toFixed(2);
+                // Format numbers consistently
+                const formattedDistance = parseFloat(result.distance.toFixed(2));
+                const formattedDuration = parseFloat(result.duration.toFixed(2));
+            
+                distanceInput.value = formattedDistance;
+                durationInput.value = formattedDuration;
 
                 document.querySelectorAll('.truck-btn').forEach(btn => {
                     const type = btn.dataset.truckType;
-                    btn.querySelector('.price').textContent = `€${result.price_estimates[type].toFixed(2)}`;
+                    const formattedPrice = parseFloat(result.price_estimates[type].toFixed(2));
+                    btn.querySelector('.price').textContent = `€${formattedPrice}`;
+                    btn.dataset.price = formattedPrice; // Store numeric value in data attribute
                 });
 
                 estimateResults.style.display = 'block';
@@ -298,9 +304,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const tripData = {
             pickup_location: pickupLocation.value,
             destination: destination.value,
-            est_duration: estDuration ? parseFloat(estDuration.value) || 0 : 0,
-            est_distance: estDistance ? parseFloat(estDistance.value) || 0 : 0,
-            est_price: estPrice ? parseFloat(estPrice.value) || 0 : 0,
+            est_duration: estDuration ? parseFloat(parseFloat(estDuration.value).toFixed(2)) || 0 : 0,
+            est_distance: estDistance ? parseFloat(parseFloat(estDistance.value).toFixed(2)) || 0 : 0,
+            est_price: estPrice ? parseFloat(parseFloat(estPrice.value).toFixed(2)) || 0 : 0,
             truck_type: truckType,
             cargo_description: cargoDescription.value,
             cargo_weight: parseFloat(cargoWeight.value) || 0,
