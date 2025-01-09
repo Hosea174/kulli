@@ -1,3 +1,4 @@
+from datetime import datetime
 from models import db, User, TruckOwner, Trip
 
 def create_user(email, name, phone, password):
