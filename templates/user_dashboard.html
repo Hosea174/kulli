@@ -11,6 +11,7 @@
     <section class="trip-request">
       <h3>Create New Trip Request</h3>
       <form id="tripForm" class="trip-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-columns">
           <div class="form-column">
             <div class="form-group">
@@ -26,6 +27,11 @@
             <div class="form-group">
               <label for="est_distance">Estimated Distance (km):</label>
               <input type="number" step="0.1" id="est_distance" name="est_distance" required>
+            </div>
+
+            <div class="form-group">
+              <label for="est_duration">Estimated Duration (hours):</label>
+              <input type="number" step="0.1" id="est_duration" name="est_duration" required>
             </div>
 
             <div class="form-group">
@@ -231,8 +237,24 @@
     form.addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData.entries());
+      // Get the selected truck type
+      const selectedTruck = document.querySelector('.truck-btn.active');
+      const truckType = selectedTruck ? selectedTruck.dataset.truckType : null;
+      
+      // Get form data
+      const formData = {
+        pickup_location: form.querySelector('#pickup_location').value,
+        destination: form.querySelector('#destination').value,
+        est_distance: parseFloat(form.querySelector('#est_distance').value),
+        est_duration: parseFloat(form.querySelector('input[name="est_duration"]').value),
+        price: parseFloat(form.querySelector('input[name="est_price"]').value),
+        truck_type: truckType,
+        cargo_description: form.querySelector('#cargo_description').value,
+        cargo_weight: parseFloat(form.querySelector('#cargo_weight').value),
+        cargo_volume: parseFloat(form.querySelector('#cargo_volume').value),
+        special_requirements: form.querySelector('#special_requirements').value,
+        user_id: {{ current_user.id }}
+      };
       
       try {
         const response = await fetch('/create_trip', {
@@ -241,7 +263,7 @@
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
           },
-          body: JSON.stringify(data)
+          body: JSON.stringify(formData)
         });
         
         const result = await response.json();
