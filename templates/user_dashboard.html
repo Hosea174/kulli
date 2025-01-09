@@ -248,6 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
             special_requirements: form.querySelector('#special_requirements').value,
             user_id: parseInt("{{ current_user.id }}")
         };
+        };
         
         try {
             const response = await fetch('/create_trip', {
