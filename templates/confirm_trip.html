@@ -12,7 +12,7 @@
   <p><strong>Estimated Duration:</strong> {{ "%.1f"|format(trip_data['est_duration'] / 60) }} hours</p>
   <p><strong>Estimated Price:</strong> €{{ "%.2f"|format(trip_data['est_price']) }}</p>
 
-  <form method="POST" action="{{ url_for('confirm_trip') }}">
+  <form method="POST" action="{{ url_for('create_trip') }}">
     <input type="hidden" name="pickup_location" value="{{ trip_data['pickup_location'] }}">
     <input type="hidden" name="destination" value="{{ trip_data['destination'] }}">
     <input type="hidden" name="truck_type" value="{{ trip_data['truck_type'] }}">
