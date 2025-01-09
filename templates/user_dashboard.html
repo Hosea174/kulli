@@ -25,26 +25,23 @@
 
             <div class="form-group">
               <label for="est_distance">Estimated Distance (km):</label>
-              <input type="number" id="est_distance" name="est_distance" 
-                     step="0.01" min="0" max="10000" 
+              <input type="number" id="est_distance" name="est_distance" step="0.01"
                      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
-                     onblur="this.value = parseFloat(this.value).toFixed(2)">
+                     onblur="this.value = parseFloat(this.value || 0).toFixed(2)">
             </div>
 
             <div class="form-group">
               <label for="est_duration">Estimated Duration (hours):</label>
-              <input type="number" id="est_duration" name="est_duration" 
-                     step="0.1" min="0" max="1000" 
+              <input type="number" id="est_duration" name="est_duration" step="0.1"
                      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
-                     onblur="this.value = parseFloat(this.value).toFixed(1)">
+                     onblur="this.value = parseFloat(this.value || 0).toFixed(1)">
             </div>
 
             <div class="form-group">
               <label for="est_price">Maximum Price (€):</label>
-              <input type="number" id="est_price" name="est_price" 
-                     step="0.01" min="0" max="100000" 
+              <input type="number" id="est_price" name="est_price" step="0.01"
                      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
-                     onblur="this.value = parseFloat(this.value).toFixed(2)">
+                     onblur="this.value = parseFloat(this.value || 0).toFixed(2)">
             </div>
           </div>
 
@@ -331,18 +328,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Validate numeric fields
         const numericFields = [
-            {element: formElements.estDuration, min: 0, max: 1000},
-            {element: formElements.estDistance, min: 0, max: 10000},
-            {element: formElements.estPrice, min: 0, max: 100000},
             {element: formElements.cargoWeight, min: 0},
             {element: formElements.cargoVolume, min: 0}
         ];
 
         for (const field of numericFields) {
             const value = parseFloat(field.element.value);
-            if (isNaN(value) || value < field.min || (field.max && value > field.max)) {
+            if (isNaN(value) || value < field.min) {
                 field.element.classList.add('error');
-                alert(`Invalid value for ${field.element.id}. Must be between ${field.min} and ${field.max || 'unlimited'}`);
+                alert(`Invalid value for ${field.element.id}. Must be greater than or equal to ${field.min}`);
                 return;
             }
             field.element.classList.remove('error');
