@@ -274,25 +274,38 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        // Get form values safely
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
+        // Safely get form elements
+        const pickupLocation = document.getElementById('pickup_location');
+        const destination = document.getElementById('destination');
+        const estDuration = document.getElementById('est_duration');
+        const estDistance = document.getElementById('est_distance');
+        const estPrice = document.getElementById('est_price');
+        const cargoDescription = document.getElementById('cargo_description');
+        const cargoWeight = document.getElementById('cargo_weight');
+        const cargoVolume = document.getElementById('cargo_volume');
+        const specialRequirements = document.getElementById('special_requirements');
+        
+        // Validate required fields
+        if (!pickupLocation || !destination || !cargoDescription || !cargoWeight || !cargoVolume) {
+            alert('Please fill all required fields');
+            return;
+        }
 
         const selectedTruck = document.querySelector('.truck-btn.active');
         const truckType = selectedTruck ? selectedTruck.dataset.truckType : null;
 
-        // Prepare trip data
+        // Prepare trip data with null checks
         const tripData = {
-            pickup_location: data.pickup_location,
-            destination: data.destination,
-            est_duration: parseFloat(data.est_duration) || 0,
-            est_distance: parseFloat(data.est_distance) || 0,
-            est_price: parseFloat(data.est_price) || 0,
+            pickup_location: pickupLocation.value,
+            destination: destination.value,
+            est_duration: estDuration ? parseFloat(estDuration.value) || 0 : 0,
+            est_distance: estDistance ? parseFloat(estDistance.value) || 0 : 0,
+            est_price: estPrice ? parseFloat(estPrice.value) || 0 : 0,
             truck_type: truckType,
-            cargo_description: data.cargo_description,
-            cargo_weight: parseFloat(data.cargo_weight) || 0,
-            cargo_volume: parseFloat(data.cargo_volume) || 0,
-            special_requirements: data.special_requirements,
+            cargo_description: cargoDescription.value,
+            cargo_weight: parseFloat(cargoWeight.value) || 0,
+            cargo_volume: parseFloat(cargoVolume.value) || 0,
+            special_requirements: specialRequirements ? specialRequirements.value : '',
             user_id: parseInt("{{ current_user.id }}")
         };
 
