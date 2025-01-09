@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cargo_weight: parseFloat(form.querySelector('#cargo_weight').value),
             cargo_volume: parseFloat(form.querySelector('#cargo_volume').value),
             special_requirements: form.querySelector('#special_requirements').value,
-            user_id: {{ current_user.id }}
+            user_id: parseInt("{{ current_user.id }}")
         };
         
         try {
