@@ -26,19 +26,25 @@
             <div class="form-group">
               <label for="est_distance">Estimated Distance (km):</label>
               <input type="number" id="est_distance" name="est_distance" 
-                     step="0.01" min="0" max="10000" pattern="^\d+(\.\d{1,2})?$">
+                     step="0.01" min="0" max="10000" 
+                     oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+                     onblur="this.value = parseFloat(this.value).toFixed(2)">
             </div>
 
             <div class="form-group">
               <label for="est_duration">Estimated Duration (hours):</label>
               <input type="number" id="est_duration" name="est_duration" 
-                     step="0.1" min="0" max="1000" pattern="^\d+(\.\d{1,1})?$">
+                     step="0.1" min="0" max="1000" 
+                     oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+                     onblur="this.value = parseFloat(this.value).toFixed(1)">
             </div>
 
             <div class="form-group">
               <label for="est_price">Maximum Price (€):</label>
               <input type="number" id="est_price" name="est_price" 
-                     step="0.01" min="0" max="100000" pattern="^\d+(\.\d{1,2})?$">
+                     step="0.01" min="0" max="100000" 
+                     oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+                     onblur="this.value = parseFloat(this.value).toFixed(2)">
             </div>
           </div>
 
@@ -283,40 +289,94 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        // Safely get form elements
-        const pickupLocation = document.getElementById('pickup_location');
-        const destination = document.getElementById('destination');
-        const estDuration = document.getElementById('est_duration');
-        const estDistance = document.getElementById('est_distance');
-        const estPrice = document.getElementById('est_price');
-        const cargoDescription = document.getElementById('cargo_description');
-        const cargoWeight = document.getElementById('cargo_weight');
-        const cargoVolume = document.getElementById('cargo_volume');
-        const specialRequirements = document.getElementById('special_requirements');
-        
-        // Validate required fields
-        if (!pickupLocation || !destination || !cargoDescription || !cargoWeight || !cargoVolume) {
-            alert('Please fill all required fields');
-            return;
+        // Safely get form elements with null checks
+        const formElements = {
+            pickupLocation: document.getElementById('pickup_location'),
+            destination: document.getElementById('destination'),
+            estDuration: document.getElementById('est_duration'),
+            estDistance: document.getElementById('est_distance'),
+            estPrice: document.getElementById('est_price'),
+            cargoDescription: document.getElementById('cargo_description'),
+            cargoWeight: document.getElementById('cargo_weight'),
+            cargoVolume: document.getElementById('cargo_volume'),
+            specialRequirements: document.getElementById('special_requirements')
+        };
+
+        // Check if any required element is missing
+        for (const [key, element] of Object.entries(formElements)) {
+            if (!element && key !== 'specialRequirements') {
+                console.error(`Form element ${key} not found`);
+                alert('Form submission error. Please refresh the page and try again.');
+                return;
+            }
         }
 
-        const selectedTruck = document.querySelector('.truck-btn.active');
-        const truckType = selectedTruck ? selectedTruck.dataset.truckType : null;
+        // Validate required fields have values
+        const requiredFields = [
+            formElements.pickupLocation,
+            formElements.destination,
+            formElements.cargoDescription,
+            formElements.cargoWeight,
+            formElements.cargoVolume
+        ];
 
-        // Prepare trip data with null checks
+        for (const field of requiredFields) {
+            if (!field.value.trim()) {
+                field.classList.add('error');
+                alert('Please fill all required fields');
+                return;
+            }
+            field.classList.remove('error');
+        }
+
+        // Validate numeric fields
+        const numericFields = [
+            {element: formElements.estDuration, min: 0, max: 1000},
+            {element: formElements.estDistance, min: 0, max: 10000},
+            {element: formElements.estPrice, min: 0, max: 100000},
+            {element: formElements.cargoWeight, min: 0},
+            {element: formElements.cargoVolume, min: 0}
+        ];
+
+        for (const field of numericFields) {
+            const value = parseFloat(field.element.value);
+            if (isNaN(value) || value < field.min || (field.max && value > field.max)) {
+                field.element.classList.add('error');
+                alert(`Invalid value for ${field.element.id}. Must be between ${field.min} and ${field.max || 'unlimited'}`);
+                return;
+            }
+            field.element.classList.remove('error');
+        }
+
+        // Get selected truck type
+        const selectedTruck = document.querySelector('.truck-btn.active');
+        if (!selectedTruck) {
+            alert('Please select a truck type');
+            return;
+        }
+        const truckType = selectedTruck.dataset.truckType;
+
+        // Prepare trip data with proper number formatting
         const tripData = {
-            pickup_location: pickupLocation.value,
-            destination: destination.value,
-            est_duration: estDuration ? Math.round(parseFloat(estDuration.value) * 10) / 10 || 0 : 0,
-            est_distance: estDistance ? Math.round(parseFloat(estDistance.value) * 100) / 100 || 0 : 0,
-            est_price: estPrice ? Math.round(parseFloat(estPrice.value) * 100) / 100 || 0 : 0,
+            pickup_location: formElements.pickupLocation.value.trim(),
+            destination: formElements.destination.value.trim(),
+            est_duration: parseFloat(formElements.estDuration.value).toFixed(1),
+            est_distance: parseFloat(formElements.estDistance.value).toFixed(2),
+            est_price: parseFloat(formElements.estPrice.value).toFixed(2),
             truck_type: truckType,
-            cargo_description: cargoDescription.value,
-            cargo_weight: parseFloat(cargoWeight.value) || 0,
-            cargo_volume: parseFloat(cargoVolume.value) || 0,
-            special_requirements: specialRequirements ? specialRequirements.value : '',
+            cargo_description: formElements.cargoDescription.value.trim(),
+            cargo_weight: parseFloat(formElements.cargoWeight.value).toFixed(1),
+            cargo_volume: parseFloat(formElements.cargoVolume.value).toFixed(1),
+            special_requirements: formElements.specialRequirements ? formElements.specialRequirements.value.trim() : '',
             user_id: parseInt("{{ current_user.id }}")
         };
+
+        // Convert string numbers back to numbers for API
+        tripData.est_duration = parseFloat(tripData.est_duration);
+        tripData.est_distance = parseFloat(tripData.est_distance);
+        tripData.est_price = parseFloat(tripData.est_price);
+        tripData.cargo_weight = parseFloat(tripData.cargo_weight);
+        tripData.cargo_volume = parseFloat(tripData.cargo_volume);
 
         try {
             const response = await fetch('/create_trip', {
