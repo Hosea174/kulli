@@ -25,17 +25,17 @@
 
             <div class="form-group">
               <label for="est_distance">Estimated Distance (km):</label>
-              <input type="number" step="0.1" id="est_distance" name="est_distance" required>
+              <input type="number" id="est_distance" name="est_distance">
             </div>
 
             <div class="form-group">
               <label for="est_duration">Estimated Duration (hours):</label>
-              <input type="number" step="0.1" id="est_duration" name="est_duration" required>
+              <input type="number" id="est_duration" name="est_duration">
             </div>
 
             <div class="form-group">
               <label for="est_price">Maximum Price (€):</label>
-              <input type="number" step="0.01" id="est_price" name="est_price" required>
+              <input type="number" step="0.01" id="est_price" name="est_price">
             </div>
           </div>
 
@@ -179,14 +179,56 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('tripForm');
+    const pickupLocationInput = document.getElementById('pickup_location');
+    const destinationInput = document.getElementById('destination');
+    const distanceInput = document.getElementById('est_distance');
+    const durationInput = document.getElementById('est_duration');
     const estimateBtn = document.getElementById('estimateBtn');
     const submitBtn = document.getElementById('submitBtn');
     const estimateResults = document.getElementById('estimateResults');
-    
+    const mapboxAccessToken = "{{ config.MAPBOX_ACCESS_TOKEN }}";
+
+    function getRoute() {
+        const pickup = pickupLocationInput.value;
+        const destination = destinationInput.value;
+
+        if (!pickup || !destination) {
+            return;
+        }
+
+        const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup},${destination}?geometries=geojson&access_token=${mapboxAccessToken}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.routes && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    const distance = route.distance / 1000; // Convert meters to kilometers
+                    const duration = route.duration / 3600; // Convert seconds to hours
+
+                    distanceInput.value = distance.toFixed(2);
+                    durationInput.value = duration.toFixed(2);
+                } else if (data.message) {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching route:', error);
+            });
+    }
+
     estimateBtn.addEventListener('click', async function() {
+        pickupLocationInput.addEventListener('blur', getRoute);
+        destinationInput.addEventListener('blur', getRoute);
+
+        if (!pickupLocationInput || !destinationInput) {
+            console.error("Pickup or destination input not found");
+            return;
+        }
+
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
-        
+
         try {
             const response = await fetch('/api/estimate_route', {
                 method: 'POST',
@@ -198,18 +240,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     destination: data.destination
                 })
             });
-            
+
             const result = await response.json();
-            
+
             if (response.ok) {
-                form.querySelector('input[name="est_distance"]').value = result.distance.toFixed(2);
-                form.querySelector('input[name="est_duration"]').value = result.duration.toFixed(2);
-                
+                distanceInput.value = result.distance.toFixed(2);
+                durationInput.value = result.duration.toFixed(2);
+
                 document.querySelectorAll('.truck-btn').forEach(btn => {
                     const type = btn.dataset.truckType;
                     btn.querySelector('.price').textContent = `€${result.price_estimates[type].toFixed(2)}`;
                 });
-                
+
                 estimateResults.style.display = 'block';
                 submitBtn.disabled = false;
             } else {
@@ -219,27 +261,27 @@ document.addEventListener('DOMContentLoaded', function() {
             alert(error.message);
         }
     });
-    
+
     document.querySelectorAll('.truck-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.truck-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            form.querySelector('input[name="est_price"]').value = 
+            form.querySelector('input[name="est_price"]').value =
                 parseFloat(this.querySelector('.price').textContent.replace('€', ''));
         });
     });
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const selectedTruck = document.querySelector('.truck-btn.active');
         const truckType = selectedTruck ? selectedTruck.dataset.truckType : null;
-        
+
         const formData = {
             pickup_location: form.querySelector('#pickup_location').value,
             destination: form.querySelector('#destination').value,
-            est_distance: parseFloat(form.querySelector('#est_distance').value),
-            est_duration: parseFloat(form.querySelector('input[name="est_duration"]').value),
+            distance: distanceInput ? parseFloat(distanceInput.value) : null,
+            duration: durationInput ? parseFloat(durationInput.value) : null,
             est_price: parseFloat(form.querySelector('input[name="est_price"]').value),
             truck_type: truckType,
             cargo_description: form.querySelector('#cargo_description').value,
@@ -248,8 +290,7 @@ document.addEventListener('DOMContentLoaded', function() {
             special_requirements: form.querySelector('#special_requirements').value,
             user_id: parseInt("{{ current_user.id }}")
         };
-        };
-        
+
         try {
             const response = await fetch('/create_trip', {
                 method: 'POST',
@@ -259,9 +300,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify(formData)
             });
-            
+
             const result = await response.json();
-            
+
             if (response.ok) {
                 window.location.href = '/user/dashboard';
             } else {
@@ -277,7 +318,7 @@ document.addEventListener('click', function(e) {
     if (e.target && e.target.classList.contains('toggle-details')) {
         const tripId = e.target.dataset.tripId;
         const detailsRow = document.getElementById(`details-${tripId}`);
-        
+
         if (detailsRow) {
             detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
         }
