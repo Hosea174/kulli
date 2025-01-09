@@ -3,7 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user, login_required
 from flask_mail import Mail
 from flask_migrate import Migrate
-from flask_wtf.csrf import CSRFProtect, generate_csrf
 import os
 from dotenv import load_dotenv
 from flask_login import LoginManager
@@ -38,11 +37,6 @@ db.init_app(app)
 mail.init_app(app)
 login_manager = LoginManager(app)
 migrate = Migrate(app, db)
-csrf = CSRFProtect(app)
-
-@app.context_processor
-def inject_csrf_token():
-    return dict(csrf_token=generate_csrf)
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'

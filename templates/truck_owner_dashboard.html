@@ -38,7 +38,6 @@
       <tr class="trip-details" id="details-{{ trip.id }}" style="display: none;">
         <td colspan="7">
           <form method="POST" action="{{ url_for('update_trip_status_route') }}" class="trip-update-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="trip_id" value="{{ trip.id }}">
             <input type="hidden" name="truck_owner_id" value="{{ current_user.id }}">
             

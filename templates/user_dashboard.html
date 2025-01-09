@@ -11,7 +11,6 @@
     <section class="trip-request">
       <h3>Create New Trip Request</h3>
       <form id="tripForm" class="trip-form">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-columns">
           <div class="form-column">
             <div class="form-group">
@@ -192,8 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/api/estimate_route', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     pickup_location: data.pickup_location,
