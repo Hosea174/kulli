@@ -2,58 +2,93 @@
 
 {% block title %}Truck Owner Dashboard{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/trucker_dashboard.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="dashboard">
-  <h2>Welcome, {{ current_user.name }}</h2>
+  <h2><img src="{{ url_for('static', filename='images/icons/hello.svg') }}" alt=""> <span>Welcome, {{ current_user.name
+      }}</span></h2>
 
-  <h3>Available Trips</h3>
-  <table class="trip-table">
-    <thead>
-      <tr>
-        <th>Pickup Location</th>
-        <th>Destination</th>
-        <th>Distance</th>
-        <th>Duration</th>
-        <th>Price</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for trip in trips|reverse %}
-      <tr id="trip-row-{{ trip.id }}">
-        <td>{{ trip.pickup_location }}</td>
-        <td>{{ trip.destination }}</td>
-        <td>{{ trip.est_distance }} km</td>
-        <td>{{ trip.est_duration }} mins</td>
-        <td>${{ trip.est_price }}</td>
-        <td class="trip-actions">
-          {% if trip.status == 'waiting' %}
-          <button class="btn-primary" onclick="updateTripStatus('{{ trip.id }}', 'truck_assigned')">Accept</button>
-          <button class="btn-secondary" onclick="updateTripStatus('{{ trip.id }}', 'rejected')">Reject</button>
-          {% elif trip.status == 'truck_assigned' %}
-          <button class="btn-primary" onclick="updateTripStatus('{{ trip.id }}', 'started')">Start Trip</button>
-          <button class="btn-secondary" onclick="updateTripStatus('{{ trip.id }}', 'canceled')">Cancel Trip</button>
-          {% elif trip.status == 'started' %}
-          <button class="btn-primary" onclick="updateTripStatus('{{ trip.id }}', 'completed')">Finish Trip</button>
-          {% else %}
-          <span>{{ trip.status.capitalize() }}</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="action-area">
+    <div class="view-trips">
+      <h3>Available Trips</h3>
+      <table class="trip-table">
+        <thead>
+          <tr>
+            <th>Pickup Location</th>
+            <th>Destination</th>
+            <th>Distance</th>
+            <th>Duration</th>
+            <th>Price</th>
+            <th>Actions</th>
+            <th>User Info</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for trip in trips|reverse %}
+          <tr id="trip-row-{{ trip.id }}">
+            <td>{{ trip.pickup_location }}</td>
+            <td>{{ trip.destination }}</td>
+            <td>{{ trip.est_distance }} km</td>
+            <td>{{ trip.est_duration }} mins</td>
+            <td>ETB {{ format(trip.est_price, ",") }}</td>
+            <td class="trip-actions">
+              {% if trip.status == 'waiting' %}
+              <button class="action action-accept"
+                onclick="updateTripStatus('{{ trip.id }}', 'truck_assigned', '{{ current_user.id }}')">Accept</button>
+              <button class="action action-reject"
+                onclick="updateTripStatus('{{ trip.id }}', 'rejected', '{{ current_user.id }}')">Reject</button>
+              {% elif trip.status == 'truck_assigned' %}
+              <button class="action action-start"
+                onclick="updateTripStatus('{{ trip.id }}', 'started', '{{ current_user.id }}')">Start
+                Trip</button>
+              <button class="action action-cancel"
+                onclick="updateTripStatus('{{ trip.id }}', 'waiting', '{{ current_user.id }}')">Cancel
+                Trip</button>
+              {% elif trip.status == 'started' %}
+              <button class="action action-finish"
+                onclick="updateTripStatus('{{ trip.id }}', 'completed', '{{ current_user.id }}')">Finish
+                Trip</button>
+              {% else %}
+              <span>{{ trip.status.capitalize() }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if not (trip.status in ["waiting", "canceled"]) %}
+              <button onclick="showUserInfo('{{ trip.id }}')" class="show-detail user-detail">User info</button>
+              {% else %}
+              N/A
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+</div>
+<div id="overlay" class="hidden"></div>
+<div id="modal" class="hidden">
+  <h3>User Details</h3>
+  <p id="user-name"></p>
+  <p id="user-email"></p>
+  <p id="user-phone"></p>
+  <button id="close-modal">Close</button>
 </div>
 
 <script>
-  async function updateTripStatus(tripId, newStatus) {
+  async function updateTripStatus(tripId, newStatus, truckOwnerId) {
     try {
       const response = await fetch('/api/update_trip_status', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ trip_id: tripId, new_status: newStatus })
+        body: JSON.stringify({ trip_id: tripId, new_status: newStatus, truck_owner_id: truckOwnerId })
       });
 
       const data = await response.json();
@@ -82,5 +117,49 @@
       console.error('Error updating trip status:', error);
     }
   }
+
+  // get the info of the user whose trip is accepted
+  async function showUserInfo(tripId) {
+    const modal = document.querySelector("#modal");
+    const overlay = document.querySelector("#overlay");
+    const userName = document.querySelector("#user-name");
+    const userEmail = document.querySelector("#user-email");
+    const userPhone = document.querySelector("#user-phone");
+    const closeModalButton = document.querySelector("#close-modal");
+
+    try {
+      const response = await fetch(`/api/info/${tripId}?type=user`);
+      const data = await response.json();
+
+      if (response.ok) {
+        userName.textContent = `Name: ${data.name}`;
+        userEmail.innerHTML = `Email: <a href="mailto:${data.email}">${data.email}</a>`;
+        userPhone.innerHTML = `Phone: <a href="tel:${data.phone}">${data.phone}</a>`;
+
+        modal.classList.remove("hidden");
+        overlay.classList.remove("hidden");
+
+        closeModalButton.addEventListener("click", () => {
+          modal.classList.add("hidden");
+          overlay.classList.add("hidden");
+        });
+
+        overlay.addEventListener("click", () => {
+          modal.classList.add("hidden");
+          overlay.classList.add("hidden");
+        });
+
+      } else {
+        console.error('Failed to fetch user info:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+    }
+  }
+
+
+
+
+
 </script>
 {% endblock %}

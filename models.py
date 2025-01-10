@@ -31,11 +31,11 @@ class Trip(db.Model):
     truck_owner_id = db.Column(db.Integer, db.ForeignKey('truck_owner.id'))
     pickup_location = db.Column(db.String(200), nullable=False)
     destination = db.Column(db.String(200), nullable=False)
-    status = db.Column(db.String(20), default='waiting')  # waiting, truck_assigned, started, completed, canceled
+    status = db.Column(db.String(20), default='waiting')  # waiting, truck_assigned, started, completed
     est_duration = db.Column(db.Float)  # In hours
     est_distance = db.Column(db.Float)  # In kilometers
     est_price = db.Column(db.Float)
-    actual_duration = db.Column(db.Float, default=None)  # Initially NULL
-    actual_distance = db.Column(db.Float, default=None)  # Initially NULL
-    actual_price = db.Column(db.Float, default=None)  # Initially NULL
+    actual_duration = db.Column(db.Float, default=None) 
+    actual_distance = db.Column(db.Float, default=None) 
+    actual_price = db.Column(db.Float, default=None) 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

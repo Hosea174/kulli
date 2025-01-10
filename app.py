@@ -6,7 +6,7 @@ from flask_login import LoginManager
 import requests
 from crud import create_trip, get_user_trips, get_waiting_trips, update_trip_status
 from extensions import db, mail, socketio
-from models import User, TruckOwner
+from models import Trip, User, TruckOwner
 
 # Load environment variables
 load_dotenv()
@@ -57,11 +57,11 @@ def user_dashboard():
 @app.route('/truck-owner/dashboard', methods=['GET', 'POST'])
 @login_required
 def truck_owner_dashboard():
-    if request.method == 'POST':
-        trip_id = request.form.get('trip_id')
-        update_trip_status(trip_id, 'truck_assigned')
+    # if request.method == 'POST':
+    #     trip_id = request.form.get('trip_id')
+    #     print(trip_id)
+    #     update_trip_status(trip_id, 'truck_assigned')
         
-    print("Logged-in user:", current_user.name, current_user.email, current_user.id)
     trips = get_waiting_trips()
     return render_template('truck_owner_dashboard.html', trips=trips)
 
@@ -160,8 +160,12 @@ def autocomplete():
 def update_trip_status_api():
     trip_id = request.json.get('trip_id')
     new_status = request.json.get('new_status')
+    truck_owner_id = request.json.get('truck_owner_id')
 
-    trip = update_trip_status(trip_id, new_status)
+    trip = update_trip_status(trip_id, new_status, truck_owner_id)
+    if new_status == "truck_assigned":
+        pass
+
     if not trip:
         return jsonify({"error": "Trip not found"}), 404
 
@@ -175,6 +179,35 @@ def update_trip_status_api():
         "trip_id": trip.id,
         "new_status": trip.status
     })
+
+@app.route('/api/info/<int:trip_id>', methods=['GET'])
+@login_required
+def get_info(trip_id):
+    info_type = request.args.get('type')
+    trip = Trip.query.get(trip_id)
+    if not trip:
+        return jsonify({"error": "Trip not found"}), 404
+
+    if info_type == 'user':
+        user = User.query.get(trip.user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        return jsonify({
+            "name": user.name,
+            "email": user.email,
+            "phone": user.phone
+        })
+    elif info_type == 'trucker':
+        truck_owner = TruckOwner.query.get(trip.truck_owner_id)
+        if not truck_owner:
+            return jsonify({"error": "Trucker not found"}), 404
+        return jsonify({
+            "name": truck_owner.name,
+            "email": truck_owner.email,
+            "phone": truck_owner.phone
+        })
+    else:
+        return jsonify({"error": "Invalid info type"}), 400
 
 if __name__ == '__main__':
     with app.app_context():

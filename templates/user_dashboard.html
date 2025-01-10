@@ -88,7 +88,8 @@
                 trip.status.replace('_', ' ').capitalize() }}</span></td>
             <td>
               {% if not (trip.status in ["waiting", "canceled"]) %}
-              <button class="trucker-detail">Trucker info</button>
+              <button onclick="showTruckerInfo('{{ trip.id }}')" class="show-detail trucker-detail">Trucker
+                info</button>
               {% else %}
               N/A
               {% endif %}
@@ -99,7 +100,14 @@
       </table>
     </div>
   </div>
-
+  <div id="overlay" class="hidden"></div>
+  <div id="modal" class="hidden">
+    <h3>Truck Owner Details</h3>
+    <p id="trucker-name"></p>
+    <p id="trucker-email"></p>
+    <p id="trucker-phone"></p>
+    <button id="close-modal">Close</button>
+  </div>
 
 
 
@@ -141,7 +149,46 @@
     }
   }
 
-  // Add event listeners to the location search fields for real-time autocomplete
+  // get the info of the trucker who accepted the trip 
+  async function showTruckerInfo(tripId) {
+    const modal = document.querySelector("#modal");
+    const overlay = document.querySelector("#overlay");
+    const truckerName = document.querySelector("#trucker-name");
+    const truckerEmail = document.querySelector("#trucker-email");
+    const truckerPhone = document.querySelector("#user-phone");
+    const closeModalButton = document.querySelector("#close-modal");
+
+    try {
+      const response = await fetch(`/api/info/${tripId}?type=trucker`);
+      const data = await response.json();
+
+      if (response.ok) {
+        truckerName.textContent = `Name: ${data.name}`;
+        truckerEmail.innerHTML = `Email: <a href="mailto:${data.email}">${data.email}</a>`;
+        truckerPhone.innerHTML = `Phone: <a href="tel:${data.phone}">${data.phone}</a>`;
+        
+        modal.classList.remove("hidden");
+        overlay.classList.remove("hidden");
+
+        closeModalButton.addEventListener("click", () => {
+          modal.classList.add("hidden");
+          overlay.classList.add("hidden");
+        });
+
+        overlay.addEventListener("click", () => {
+          modal.classList.add("hidden");
+          overlay.classList.add("hidden");
+        });
+
+      } else {
+        console.error('Failed to fetch trucker info:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching trucker info:', error);
+    }
+  }
+
+  // event listeners to the location search fields for real-time autocomplete
   document.addEventListener('DOMContentLoaded', () => {
     const pickupInput = document.getElementById('pickup_location');
     const destinationInput = document.getElementById('destination');

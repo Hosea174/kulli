@@ -25,10 +25,15 @@ def create_trip(user_id, pickup_location, destination, est_duration, est_distanc
     return trip
 
 # Update trip status
-def update_trip_status(trip_id, status):
+def update_trip_status(trip_id, status, truck_owner_id):
     trip = Trip.query.get(trip_id)
     if trip:
         trip.status = status
+        if status == "truck_assigned":
+            trip.truck_owner_id = truck_owner_id
+        elif status == "waiting": #if trucker canceled the trip after accepting it
+            trip.truck_owner_id = None
+
         db.session.commit()
     return trip
 
