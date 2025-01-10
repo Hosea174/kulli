@@ -2,65 +2,106 @@
 
 {% block title %}User Dashboard{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user_dashboard.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="dashboard">
-  <h2>Welcome, {{ current_user.name }}</h2>
-  <div class="dashboard-actions">
-    <a href="/" class="btn-primary">Create a New Trip</a>
+  <h2><img src="{{ url_for('static', filename='images/icons/hello.svg') }}" alt=""> <span>Welcome, {{ current_user.name
+      }}</span></h2>
+
+  <div class="action-area">
+    <div class="create-trip">
+      <h3>Create a New Trip</h3>
+      <form method="POST" action="{{ url_for('create_trip_route') }}">
+        <div class="form-group">
+          <label class="top-label" for="pickup_location">Start Location</label>
+          <input class="field" type="text" id="pickup_location" name="pickup_location" placeholder="Location 1" required
+            autocomplete="street-address">
+        </div>
+        <div class="form-group">
+          <label class="top-label" for="destination">End Location</label>
+          <input class="field" type="text" id="destination" name="destination" placeholder="Location 2" required
+            autocomplete="street-address">
+        </div>
+        <div class="truck-type">
+          <p class="top-label">Truck Type</p>
+
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" id="small" name="truck_type" value="small_pickup">
+              <label for="small">
+                <span class="icon">
+                  <img src="{{ url_for('static', filename='images/icons/truck-sm.svg') }}" alt="Small truck icon">
+                </span>
+                Small
+              </label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="medium" name="truck_type" value="mid_sized" checked>
+              <label for="medium">
+                <span class="icon">
+                  <img src="{{ url_for('static', filename='images/icons/truck-md.svg') }}" alt="Medium truck icon">
+                </span>
+                Medium
+              </label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="large" name="truck_type" value="large">
+              <label for="large">
+                <span class="icon">
+                  <img src="{{ url_for('static', filename='images/icons/truck-lg.svg') }}" alt="Large truck icon">
+                </span>
+                Large
+              </label>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">Continue</button>
+      </form>
+    </div>
+    <div class="view-trips">
+      <h3>Your Trips</h3>
+      <table class="trip-table">
+        <thead>
+          <tr>
+            <th>Pickup Location</th>
+            <th>Destination</th>
+            <th>Distance</th>
+            <th>Duration</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Trucker Info</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for trip in trips|reverse %}
+          <tr id="trip-row-{{ trip.id }}">
+            <td>{{ trip.pickup_location }}</td>
+            <td>{{ trip.destination }}</td>
+            <td>{{ trip.est_distance }} km</td>
+            <td>{{ trip.est_duration }} min</td>
+            <td>ETB {{ format(trip.est_price, ",") }}</td>
+            <td class="trip-status"><span class="status-label status-{{trip.status.replace('_', '-').lower()}}">{{
+                trip.status.replace('_', ' ').capitalize() }}</span></td>
+            <td>
+              {% if not (trip.status in ["waiting", "canceled"]) %}
+              <button class="trucker-detail">Trucker info</button>
+              {% else %}
+              N/A
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
-  <h3>Your Trips</h3>
-  <table class="trip-table">
-    <thead>
-      <tr>
-        <th>Pickup Location</th>
-        <th>Destination</th>
-        <th>Distance</th>
-        <th>Duration</th>
-        <th>Price</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for trip in trips %}
-      <tr id="trip-row-{{ trip.id }}">
-        <td>{{ trip.pickup_location }}</td>
-        <td>{{ trip.destination }}</td>
-        <td>{{ trip.est_distance }} km</td>
-        <td>{{ trip.est_duration }} min</td>
-        <td>${{ trip.est_price }}</td>
-        <td class="trip-status">{{ trip.status.replace('_', ' ').capitalize() }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 
 
-  <form method="POST" action="{{ url_for('create_trip_route') }}">
-    <div class="form-group">
-      <label for="pickup_location">Start Location:</label>
-      <input type="text" id="pickup_location" name="pickup_location" required autocomplete="street-address">
-    </div>
 
-    <div class="form-group">
-      <label for="destination">End Location:</label>
-      <input type="text" id="destination" name="destination" required autocomplete="street-address">
-    </div>
-
-    <div class="form-group">
-      <label>Truck Type:</label>
-      <label>
-        <input type="radio" name="truck_type" value="small_pickup" required> Small Pickup
-      </label>
-      <label>
-        <input type="radio" name="truck_type" value="mid_sized" required> Mid-sized Truck
-      </label>
-      <label>
-        <input type="radio" name="truck_type" value="large" required> Large Truck
-      </label>
-    </div>
-
-    <button type="submit" class="btn-primary">Continue</button>
-  </form>
 
 </div>
 <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"
@@ -92,10 +133,8 @@
         });
       }
 
-      // Append the datalist to the document
       document.body.appendChild(datalist);
 
-      // Associate the datalist with the input field
       inputField.setAttribute('list', datalistId);
     } catch (error) {
       console.error('Error fetching autocomplete suggestions:', error);
@@ -109,7 +148,7 @@
 
     pickupInput.addEventListener('input', () => {
       const query = pickupInput.value;
-      if (query.length > 2) { 
+      if (query.length > 2) {
         fetchSuggestions(query, pickupInput);
       }
     });
@@ -131,8 +170,8 @@
       const tripRow = document.querySelector(`#trip-row-${data.trip_id}`);
 
       if (tripRow) {
-          const statusCell = tripRow.querySelector('.trip-status');
-          statusCell.textContent = data.new_status.replace('_', ' ').toUpperCase();
+        const statusCell = tripRow.querySelector('.trip-status');
+        statusCell.textContent = data.new_status.replace('_', ' ').toUpperCase();
       }
 
     })

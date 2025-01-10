@@ -19,7 +19,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for trip in trips %}
+      {% for trip in trips|reverse %}
       <tr id="trip-row-{{ trip.id }}">
         <td>{{ trip.pickup_location }}</td>
         <td>{{ trip.destination }}</td>

@@ -1,0 +1,98 @@
+body {
+  background-image: url("../images/white-bg.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  .navbar {
+    background: #FFF;
+    box-shadow: 0px 4px 64px 0px rgba(194, 204, 210, 0.20);
+  }
+}
+
+.dashboard {
+  margin-top: 36px;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 19.777px;
+    font-weight: 600;
+  }
+
+  .action-area {
+    padding: 20px 24px;
+    border-radius: 13px;
+    border: 1px solid #D1DBD6;
+    background: rgba(219, 235, 227, 0.27);
+    box-shadow: 4px 5px 30px 0px rgba(121, 121, 121, 0.08);
+    backdrop-filter: blur(46.5px);
+
+    .trip-table {
+      width: 100%;
+      border-collapse: collapse;
+      backdrop-filter: blur(46.5px);
+      border-radius: 8px;
+      border: 1px solid #b8b7b7;
+      overflow: hidden;
+    }
+
+    .trip-table thead tr {
+      background-color: #ebf1ee;
+      text-align: left;
+      font-weight: bold;
+    }
+
+    .trip-table th,
+    .trip-table td {
+      padding: 12px 15px;
+    }
+
+    .trip-table tbody tr {
+      background-color: #ffffff;
+
+      .trip-status .status-label {
+        border-radius: 11px;
+        padding: 6px 10px;
+        width: fit-content;
+        font-size: 14px;
+
+        &.status-canceled {
+          background: #ffc3c3;
+        }
+
+        &.status-waiting {
+          background: #e4e4e4;
+        }
+
+        &.status-truck-assigned {
+          background: #c3f7ff;
+        }
+
+        &.status-started {
+          background: #FFFEDB;
+        }
+
+        &.status-completed {
+          background: #C3FFE2;
+        }
+
+      }
+    }
+
+    .trip-table tbody tr:nth-of-type(even) {
+      background-color: #f9f9f9db;
+    }
+
+
+
+
+
+  }
+}

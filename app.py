@@ -20,12 +20,14 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(BASE_DIR, "ins
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAPBOX_TOKEN'] = os.getenv('MAPBOX_TOKEN')
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.jinja_env.globals.update(format=format)
+
 # Initialize extensions
 db.init_app(app)
 mail.init_app(app)
 socketio.init_app(app)
 
-login_manager = LoginManager(app)
+# login_manager = LoginManager(app)
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
