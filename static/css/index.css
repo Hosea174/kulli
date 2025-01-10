@@ -3,14 +3,12 @@ body {
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-  min-height: 100vh;
   overflow: hidden;
 }
 
-
 .landing-page {
   .hero-text {
-    margin-top: 83px;
+    margin-top: 78px;
     max-width: 585px;
 
     h1 {
@@ -58,7 +56,8 @@ body {
       border-radius: 20px;
       border: 1px solid rgba(240, 240, 240, 0.418);
       transition: all .3s ease-in-out;
-
+      flex: 1 1 0;
+      
       .card-header {
         display: flex;
         justify-content: space-between;
@@ -107,7 +106,7 @@ body {
           font-size: 18px;
           transition: all .3s ease-in-out;
         }
-        
+
         svg path {
           transition: all .3s ease-in-out;
 
