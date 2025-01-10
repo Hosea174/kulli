@@ -100,12 +100,12 @@
 
         if (newStatus === 'truck_assigned') {
           actionsCell.innerHTML = `
-                        <button class="btn-primary" onclick="updateTripStatus(${tripId}, 'started')">Start Trip</button>
-                        <button class="btn-secondary" onclick="updateTripStatus(${tripId}, 'canceled')">Cancel Trip</button>
+                        <button class="action action-start" onclick="updateTripStatus(${tripId}, 'started')">Start Trip</button>
+                        <button class="action action-cancel" onclick="updateTripStatus(${tripId}, 'canceled')">Cancel Trip</button>
                     `;
         } else if (newStatus === 'started') {
           actionsCell.innerHTML = `
-                        <button class="btn-primary" onclick="updateTripStatus(${tripId}, 'completed')">Finish Trip</button>
+                        <button class="action action-finish" onclick="updateTripStatus(${tripId}, 'completed')">Finish Trip</button>
                     `;
         } else if (newStatus === 'completed' || newStatus === 'canceled' || newStatus === 'rejected') {
           actionsCell.innerHTML = `<span>${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}</span>`;

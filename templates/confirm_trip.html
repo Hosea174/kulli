@@ -2,102 +2,138 @@
 
 {% block title %}Confirm Trip{% endblock %}
 
-{% block content %}
-<div class="trip-confirmation">
-  <h2>Confirm Your Trip</h2>
-  <p><strong>Start Location:</strong> {{ trip_data['pickup_location'] }}</p>
-  <p><strong>End Location:</strong> {{ trip_data['destination'] }}</p>
-  <p><strong>Truck Type:</strong> {{ trip_data['truck_type'].replace('_', ' ').title() }}</p>
-  <p><strong>Estimated Distance:</strong> {{ trip_data['est_distance'] }} km</p>
-  <p><strong>Estimated Duration:</strong> {{ trip_data['est_duration'] }} mins</p>
-  <p><strong>Estimated Price:</strong> ETB {{ trip_data['est_price'] }}</p>
-
-  <form method="POST" action="{{ url_for('confirm_trip') }}">
-    <input type="hidden" name="pickup_location" value="{{ trip_data['pickup_location'] }}">
-    <input type="hidden" name="destination" value="{{ trip_data['destination'] }}">
-    <input type="hidden" name="truck_type" value="{{ trip_data['truck_type'] }}">
-    <input type="hidden" name="est_distance" value="{{ trip_data['est_distance'] }}">
-    <input type="hidden" name="est_duration" value="{{ trip_data['est_duration'] }}">
-    <input type="hidden" name="est_price" value="{{ trip_data['est_price'] }}">
-    <button type="submit" class="btn-primary">Order Trip</button>
-    <br>
-    <a href="{{ url_for('user_dashboard') }}">Create another trip</a>
-  </form>
-
-  <div id="map" style="height: 800px; width: 100%; margin: 20px 0;"
-    data-pickup-longitude="{{ trip_data['pickup_coordinates'][0] }}"
-    data-pickup-latitude="{{ trip_data['pickup_coordinates'][1] }}"
-    data-destination-longitude="{{ trip_data['destination_coordinates'][0] }}"
-    data-destination-latitude="{{ trip_data['destination_coordinates'][1] }}"></div>
-</div>
-
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const mapboxToken = 'pk.eyJ1IjoiY2hyaXN0ZWRsYSIsImEiOiJjbTVnenFicHQwY2hvMmlzNHNpaWJxdWJiIn0.0-UTAX897ENetZmVZ4zloQ';
-    const mapElement = document.getElementById("map")
-
-    const pickupCoordinates = [
-      parseFloat(mapElement.dataset.pickupLongitude),
-      parseFloat(mapElement.dataset.pickupLatitude)
-    ];
-    const destinationCoordinates = [
-      parseFloat(mapElement.dataset.destinationLongitude),
-      parseFloat(mapElement.dataset.destinationLatitude)
-    ];
-
-    console.log(pickupCoordinates)
-    console.log(destinationCoordinates)
-    
-    // Initialize Mapbox
-    mapboxgl.accessToken = mapboxToken;
-
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: pickupCoordinates,
-      zoom: 12
-    });
-
-    new mapboxgl.Marker({ color: 'green' })
-      .setLngLat(pickupCoordinates)
-      .setPopup(new mapboxgl.Popup().setText("Pickup Location"))
-      .addTo(map);
-
-    new mapboxgl.Marker({ color: 'blue' })
-      .setLngLat(destinationCoordinates)
-      .setPopup(new mapboxgl.Popup().setText("Destination"))
-      .addTo(map);
-
-    // Draw a line between the two locations
-    map.on('load', () => {
-      map.addSource('route', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: [pickupCoordinates, destinationCoordinates]
-          }
-        }
-      });
-
-      map.addLayer({
-        id: 'route',
-        type: 'line',
-        source: 'route',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': '#007bff',
-          'line-width': 5
-        }
-      });
-    });
-  });
-</script>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/confirm_trip.css') }}">
 {% endblock %}
+
+{% block content %}
+<div class="trip-confirmation dashboard">
+  <h2>Confirm Your Trip</h2>
+
+  <div class="action-area">
+    <div class="trip-details">
+      <div class="trip-details">
+        <div class="detail">
+          <img src="{{ url_for('static', filename='images/icons/pickup-icon.svg') }}" alt="">
+          <span class="trip-info">Start Location:</span>
+          <span class="trip-data">{{ trip_data['pickup_location'] }}</span>
+        </div>
+        <div class="detail">
+          <img src="{{ url_for('static', filename='images/icons/destination-icon.svg') }}" alt="">
+          <span class="trip-info">End Location:</span>
+          <span class="trip-data">{{ trip_data['destination'] }}</span>
+        </div>
+        <div class="detail">
+          <img src="{{ url_for('static', filename='images/icons/truck-icon.svg') }}" alt="">
+          <span class="trip-info">Truck Type:</span>
+          <span class="trip-data">{{ trip_data['truck_type'].replace('_', ' ').title() }}</span>
+        </div>
+        <div class="detail">
+          <img src="{{ url_for('static', filename='images/icons/distance-icon.svg') }}" alt="">
+          <span class="trip-info">Estimated Distance:</span>
+          <span class="trip-data">{{ trip_data['est_distance'] }} km</span>
+        </div>
+        <div class="detail">
+          <img src="{{ url_for('static', filename='images/icons/duration-icon.svg') }}" alt="">
+          <span class="trip-info">Estimated Duration:</span>
+          <span class="trip-data">{{ trip_data['est_duration'] }} mins</span>
+        </div>
+        <div class="detail">
+          <img src="{{ url_for('static', filename='images/icons/price-icon.svg') }}" alt="">
+          <span class="trip-info">Estimated Price:</span>
+          <span class="trip-data">ETB {{ trip_data['est_price'] }}</span>
+        </div>
+      </div>
+
+          <form method="POST" action="{{ url_for('confirm_trip') }}">
+            <input type="hidden" name="pickup_location" value="{{ trip_data['pickup_location'] }}">
+            <input type="hidden" name="destination" value="{{ trip_data['destination'] }}">
+            <input type="hidden" name="truck_type" value="{{ trip_data['truck_type'] }}">
+            <input type="hidden" name="est_distance" value="{{ trip_data['est_distance'] }}">
+            <input type="hidden" name="est_duration" value="{{ trip_data['est_duration'] }}">
+            <input type="hidden" name="est_price" value="{{ trip_data['est_price'] }}">
+            <div class="action-btns">
+              <button type="submit" class="btn-primary">Order Trip</button>
+              <a href="{{ url_for('user_dashboard') }}" class="btn-secondary">Create another trip</a>
+            </div>
+          </form>
+        </div>
+        <div id="map"
+          data-pickup-longitude="{{ trip_data['pickup_coordinates'][0] }}"
+          data-pickup-latitude="{{ trip_data['pickup_coordinates'][1] }}"
+          data-destination-longitude="{{ trip_data['destination_coordinates'][0] }}"
+          data-destination-latitude="{{ trip_data['destination_coordinates'][1] }}"></div>
+      </div>
+    </div>
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const mapboxToken = 'pk.eyJ1IjoiY2hyaXN0ZWRsYSIsImEiOiJjbTVnenFicHQwY2hvMmlzNHNpaWJxdWJiIn0.0-UTAX897ENetZmVZ4zloQ';
+        const mapElement = document.getElementById("map")
+
+        const pickupCoordinates = [
+          parseFloat(mapElement.dataset.pickupLongitude),
+          parseFloat(mapElement.dataset.pickupLatitude)
+        ];
+        const destinationCoordinates = [
+          parseFloat(mapElement.dataset.destinationLongitude),
+          parseFloat(mapElement.dataset.destinationLatitude)
+        ];
+
+        console.log(pickupCoordinates)
+        console.log(destinationCoordinates)
+
+        // Initialize Mapbox
+        mapboxgl.accessToken = mapboxToken;
+
+        const map = new mapboxgl.Map({
+          container: 'map',
+          style: 'mapbox://styles/mapbox/streets-v11',
+          center: pickupCoordinates,
+          zoom: 12
+        });
+
+        new mapboxgl.Marker({ color: 'green' })
+          .setLngLat(pickupCoordinates)
+          .setPopup(new mapboxgl.Popup().setText("Pickup Location"))
+          .addTo(map);
+
+        new mapboxgl.Marker({ color: 'blue' })
+          .setLngLat(destinationCoordinates)
+          .setPopup(new mapboxgl.Popup().setText("Destination"))
+          .addTo(map);
+
+        // Draw a line between the two locations
+        map.on('load', () => {
+          map.addSource('route', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates: [pickupCoordinates, destinationCoordinates]
+              }
+            }
+          });
+
+          map.addLayer({
+            id: 'route',
+            type: 'line',
+            source: 'route',
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round'
+            },
+            paint: {
+              'line-color': '#007bff',
+              'line-width': 5
+            }
+          });
+        });
+      });
+    </script>
+    {% endblock %}

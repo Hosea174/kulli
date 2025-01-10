@@ -1,0 +1,51 @@
+.action-area {
+  display: flex;
+  justify-content: space-between;
+  gap: 35px;
+
+  .trip-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: max-content;
+
+    .detail {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-block: 4px;
+      border-bottom: 1px solid #cdcdcd;
+    }
+
+    .detail img {
+      width: 24px;
+      height: 24px;
+    }
+
+    .trip-info {
+      font-weight: bold;
+    }
+
+    .trip-data {
+      margin-left: 5px;
+    }
+  }
+
+  .action-btns {
+    margin-top: 14px;
+    display: flex;
+    gap: 8px;
+
+    .btn-primary,
+    .btn-secondary {
+      width: 200px;
+      text-align: center;
+    }
+  }
+
+
+  #map {
+    width: 60%;
+    height: 400px;
+  }
+}

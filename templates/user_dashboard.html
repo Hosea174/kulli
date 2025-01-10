@@ -106,6 +106,7 @@
     <p id="trucker-name"></p>
     <p id="trucker-email"></p>
     <p id="trucker-phone"></p>
+    <p id="trucker-license"></p>
     <button id="close-modal">Close</button>
   </div>
 
@@ -155,7 +156,8 @@
     const overlay = document.querySelector("#overlay");
     const truckerName = document.querySelector("#trucker-name");
     const truckerEmail = document.querySelector("#trucker-email");
-    const truckerPhone = document.querySelector("#user-phone");
+    const truckerPhone = document.querySelector("#trucker-phone");
+    const truckerLicense = document.querySelector("#trucker-license");
     const closeModalButton = document.querySelector("#close-modal");
 
     try {
@@ -166,7 +168,8 @@
         truckerName.textContent = `Name: ${data.name}`;
         truckerEmail.innerHTML = `Email: <a href="mailto:${data.email}">${data.email}</a>`;
         truckerPhone.innerHTML = `Phone: <a href="tel:${data.phone}">${data.phone}</a>`;
-        
+        truckerLicense.textContent = `License Plate: ${data.license_plate}`;
+
         modal.classList.remove("hidden");
         overlay.classList.remove("hidden");
 

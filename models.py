@@ -28,9 +28,10 @@ class TruckOwner(UserMixin, db.Model):
 class Trip(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    truck_owner_id = db.Column(db.Integer, db.ForeignKey('truck_owner.id'))
+    truck_owner_id = db.Column(db.Integer, db.ForeignKey('truck_owner.id'), nullable=True)
     pickup_location = db.Column(db.String(200), nullable=False)
     destination = db.Column(db.String(200), nullable=False)
+    truck_type = db.Column(db.String(200), nullable=False)
     status = db.Column(db.String(20), default='waiting')  # waiting, truck_assigned, started, completed
     est_duration = db.Column(db.Float)  # In hours
     est_distance = db.Column(db.Float)  # In kilometers

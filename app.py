@@ -62,7 +62,7 @@ def truck_owner_dashboard():
     #     print(trip_id)
     #     update_trip_status(trip_id, 'truck_assigned')
         
-    trips = get_waiting_trips()
+    trips = get_waiting_trips(current_user.truck_type)
     return render_template('truck_owner_dashboard.html', trips=trips)
 
 @app.route('/create_trip', methods=['POST'])
@@ -132,6 +132,7 @@ def confirm_trip():
         user_id=current_user.id,
         pickup_location=trip_data['pickup_location'],
         destination=trip_data['destination'],
+        truck_type=trip_data['truck_type'],
         est_duration=float(trip_data['est_duration']),
         est_distance=float(trip_data['est_distance']),
         est_price=float(trip_data['est_price']),
@@ -204,7 +205,8 @@ def get_info(trip_id):
         return jsonify({
             "name": truck_owner.name,
             "email": truck_owner.email,
-            "phone": truck_owner.phone
+            "phone": truck_owner.phone,
+            "license_plate": truck_owner.license_plate,
         })
     else:
         return jsonify({"error": "Invalid info type"}), 400

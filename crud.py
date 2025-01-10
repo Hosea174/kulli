@@ -17,8 +17,8 @@ def create_truck_owner(email, name, phone, password, license_plate, truck_type):
     return owner
 
 # Create a new trip
-def create_trip(user_id, pickup_location, destination, est_duration, est_distance, est_price):
-    trip = Trip(user_id=user_id, pickup_location=pickup_location, destination=destination,
+def create_trip(user_id, pickup_location, destination, truck_type, est_duration, est_distance, est_price):
+    trip = Trip(user_id=user_id, pickup_location=pickup_location, destination=destination, truck_type=truck_type,
                 est_duration=est_duration, est_distance=est_distance, est_price=est_price)
     db.session.add(trip)
     db.session.commit()
@@ -42,5 +42,8 @@ def get_user_trips(user_id):
     return Trip.query.filter_by(user_id=user_id).all()
 
 # Fetch all waiting trips for truck owners
-def get_waiting_trips():
-    return Trip.query.filter(not_(Trip.status.in_(['rejected']))).all()
+def get_waiting_trips(truck_type):
+    return Trip.query.filter(
+        not_(Trip.status.in_(['rejected'])),
+        Trip.truck_type == truck_type
+    ).all()
