@@ -2,47 +2,35 @@
 
 {% block title %}Register Truck Owner{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="auth-container">
-  <h2>Register as Truck Owner</h2>
+<div class="auth-container" style="width: fit-content;">
+  <h2>Truck Owner Register</h2>
+  <p>Thank you for choosing Kulli</p>
   <form method="POST" action="{{ url_for('auth.register_truck_owner') }}" class="auth-form">
-    <div class="form-group">
-      <label for="name">Full Name:</label>
-      <input type="text" id="name" name="name" required>
-    </div>
-
-    <div class="form-group">
-      <label for="email">Email:</label>
-      <input type="email" id="email" name="email" required>
-    </div>
-
-    <div class="form-group">
-      <label for="phone">Phone Number:</label>
-      <input type="tel" id="phone" name="phone" required>
-    </div>
-
-    <div class="form-group">
-      <label for="license_plate">License Plate:</label>
-      <input type="text" id="license_plate" name="license_plate" required>
-    </div>
-
-    <div class="form-group">
-      <label for="truck_type">Truck Type:</label>
-      <select id="truck_type" name="truck_type" required>
+    <div class="input-fields">
+      <input class="field" type="text" id="name" name="name" placeholder="Full Name" required>
+      <input class="field" type="email" id="email" name="email" placeholder="Email Address" required>
+      <div class="group-fields">
+        <input class="field" type="password" id="password" name="password" placeholder="Password" required>
+        <input class="field" type="password" id="confirm_password" name="confirm_password"
+          placeholder="Confirm Password" required>
+      </div>
+      <input class="field" type="text" id="license_plate" name="license_plate" placeholder="License Plate" required>
+      <select class="field" id="truck_type" name="truck_type" required>
+        <option value="" disabled selected hidden>Select Truck Type</option>
         <option value="small_pickup">Small Pickup</option>
         <option value="mid_sized">Mid-sized Truck</option>
         <option value="large">Large Truck</option>
       </select>
-    </div>
 
-    <div class="form-group">
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required>
-    </div>
-
-    <div class="form-group">
-      <label for="confirm_password">Confirm Password:</label>
-      <input type="password" id="confirm_password" name="confirm_password" required>
+      <div class="checkbox-field">
+        <input type="checkbox" id="terms" name="terms" required>
+        <label for="terms">I accept the <a href="#">terms and conditions</a></label>
+      </div>
     </div>
 
     <button type="submit" class="btn-primary">Register</button>

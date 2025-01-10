@@ -37,7 +37,17 @@ body {
       flex-direction: column;
       gap: 7px;
 
-      input.field {
+      .group-fields {
+        display: flex;
+        gap: 7px;
+        width: 100%;
+
+        .field {
+          width: 100%;
+        }
+      }
+
+      .field {
         padding: 7px 14px;
         border-radius: 7px;
         border: 1px solid rgba(8, 8, 8, 0.45);
@@ -47,6 +57,15 @@ body {
         &:focus {
           outline: none;
           border: 2px solid #007D42;
+        }
+      }
+
+      select {
+        option {
+          background-color: #caf5e2;
+          color: #333;
+          padding: 5px;
+          font-size: 14px;
         }
       }
 
