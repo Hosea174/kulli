@@ -80,11 +80,11 @@ def register_truck_owner():
 
 def send_verification_email(email, token):
     msg = Message('Verify your email',
-                  sender='kulli@zoho.com',
+                  sender='hossaena2018@gmail.com',
                   recipients=[email])
     verification_url = url_for('auth.verify_email', token=token, _external=True)
     msg.body = f'Click the following link to verify your email: {verification_url}'
-    # mail.send(msg)
+    mail.send(msg)
     print("your verification_url: ")
     print(verification_url)
 

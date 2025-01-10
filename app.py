@@ -20,6 +20,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(BASE_DIR, "ins
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAPBOX_TOKEN'] = os.getenv('MAPBOX_TOKEN')
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['MAIL_SERVER']='sandbox.smtp.mailtrap.io'
+app.config['MAIL_PORT'] = 2525
+app.config['MAIL_USERNAME'] = 'f970a36b76e867'
+app.config['MAIL_PASSWORD'] = '8d107f7394e4cf'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
 app.jinja_env.globals.update(format=format)
 
 # Initialize extensions

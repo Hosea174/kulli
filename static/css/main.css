@@ -194,6 +194,23 @@ a {
   color: #080808;
 }
 
+/* flash messages */
+.flash-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  .flash-message {
+    border-radius: 6px;
+    background: #C3F4E1;
+    padding: 9px 18px;
+    max-width: 330px;
+    position: fixed;
+    top: 130px;
+    left: 30px;
+  }
+}
+
 
 /* main styles */
 /* navbar */

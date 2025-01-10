@@ -9,7 +9,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Mail settings
-    MAIL_SERVER = 'smtp.zoho.com'
+    MAIL_SERVER = 'sandbox.smtp.mailtrap.io'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
