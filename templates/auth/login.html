@@ -2,23 +2,21 @@
 
 {% block title %}Login{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="auth-container">
+<div class="auth-container" style="height: 390px; margin-top: 95px;">
   <h2>Login</h2>
+  <p>Welcome back!</p>
+
   <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">
-    <div class="form-group">
-      <label for="email">Email:</label>
-      <input type="email" id="email" name="email" required>
-    </div>
-
-    <div class="form-group">
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required>
-    </div>
-
-    <div class="form-group">
-      <label>Login as:</label>
-      <select name="user_type" required>
+    <div class="input-fields">
+      <input class="field" type="email" id="email" name="email" placeholder="Email Address" required>
+      <input class="field" type="password" id="password" name="password" placeholder="Password" required>
+      <select class="field" name="user_type" required>
+        <option value="" disabled selected hidden>Account Type</option>
         <option value="user">User</option>
         <option value="truck_owner">Truck Owner</option>
       </select>
@@ -27,9 +25,12 @@
     <button type="submit" class="btn-primary">Login</button>
   </form>
 
+
   <div class="auth-links">
-    <a href="{{ url_for('auth.register_user') }}">Register as User</a>
-    <a href="{{ url_for('auth.register_truck_owner') }}">Register as Truck Owner</a>
+    <p>Not a member yet? <a href="{{ url_for('auth.register_user') }}">User Register</a> <a
+        href="{{ url_for('auth.register_truck_owner') }}">Trucker Register</a>
+    </p>
   </div>
+
 </div>
 {% endblock %}
