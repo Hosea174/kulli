@@ -121,7 +121,7 @@ def create_trip_route():
 
 def calculate_price(distance, truck_type):
     start_prices = {'small_pickup': 500, 'mid_sized': 1500, 'large': 3000}
-    base_rates = {'small_pickup': 10.5, 'mid_sized': 20.5, 'large': 40.0}
+    base_rates = {'small_pickup': 30, 'mid_sized': 45, 'large': 70}
     return start_prices[truck_type] + round(distance * base_rates[truck_type], 2)
 
 @app.route('/confirm_trip_page')
